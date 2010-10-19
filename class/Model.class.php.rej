@@ -1,0 +1,11 @@
+--- class/Model.class.php (revision 64)
++++ class/Model.class.php (working copy)
+@@ -66,6 +66,8 @@
+                }
+ 
+                $this->primary_key = $ret;
++               // Sorting is important for serialization of the key
++               ksort($this->primary_key);
+        }
+ 
+        // Propagates the model with data selected by primary key

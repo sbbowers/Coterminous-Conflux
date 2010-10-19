@@ -1,0 +1,65 @@
+#!/bin/bash
+
+if [[ ! -d "$1" ]]; then
+	echo 'cf,init - initialize coterminous conflux html directory'
+	echo
+	echo ' Deletes all temp files in the web directory and can initialize to the application directory'
+	echo
+	echo ' Usage: cf,init <web directory> [<application directory>] [<data directory>]'
+	echo
+	echo ' <web directory>         The directory to remove all tempfile from and create the application links'
+	echo ' <application directory> The directory to link the application directory to';
+	echo ' <data directory>        The directory to link the data directory to';
+	echo
+	exit
+fi
+
+pushd $1 > /dev/null
+
+rm -rf `ls -a | grep --color=never -Pv "^\.+$|^.htaccess$|^index.php$"`
+
+if [[ -d "$2" ]]; then
+	fpath=${0:0:${#0}-12}
+	apath=$(echo $2 | sed 's/\/$//g')
+	dpath=$(echo $3 | sed 's/\/$//g')
+	rm -f index.php
+	ln -s $2/document_root/index.php
+
+	htfile='
+# Framework Path
+SetEnv    FPATH             %fpath%
+# Application Path
+SetEnv    APATH             %apath%
+# Static Data Content
+SetEnv    DPATH             %dpath%
+
+RewriteEngine On
+
+ReWriteRule .* - [E=URI_PREFIX:~sbbowers/mr]
+
+# This protects againts people requesting files look like cgi
+RewriteCond %{REQUEST_URI}  !^(/~[^\/]*/[^\/]*/)?index.php$
+RewriteCond %{QUERY_STRING} !__base=.*__route=
+RewriteCond %{REQUEST_URI}  \.(php|yml|asp|aspx)$
+RewriteRule .* - [NS,R=404,L]
+
+# If the file exists, or weve already rewritten it, let it pass through
+# Otherwise, rewrite the request to our format.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_URI} !(/~[^\/]*/[^\/]*/)?index.php$
+RewriteCond %{QUERY_STRING} !__route=
+#RewriteRule ^.*$ %{REQUEST_URI} [L]
+#RewriteCond %{REQUEST_URI} /~[^\/]*
+#RewriteRule ^/?((?:/?[^\/]+){2})/?(.*)$ /$1/index.php?__base=$1&__route=$2 [QSA,C]
+
+RewriteRule ^/?(.*?)/?$ /%{ENV:URI_PREFIX}/index.php?__route=$1 [QSA,L]
+'
+
+
+echo "$htfile" | sed "s|%fpath%|$fpath|" | sed "s|%apath%|$apath|" | sed "s|%dpath%|$dpath|"
+
+
+fi
+
+popd > /dev/null
+

@@ -1,0 +1,22 @@
+
+# vim: sts=2 ts=10 expandtab
+connection:
+  mealresource: # mealresource connection should probably be in application code, not in the framework
+    db_vendor: DatabasePostgres
+    max_cons: 1
+    host: localhost
+    dbname: mealresource
+    user: mealresource
+    password: tasty
+    port: 5432
+  easy_connection: mealresource
+  
+static_content:
+  exclude_ext:
+    - php
+    - yml
+default_layout: LayoutDefault
+route:
+  default: Home
+  error: Error404
+
