@@ -1,0 +1,6 @@
+#!/usr/bin/php
+<?php
+
+require dirname(__DIR__).'/class/Resolve.class.php';
+
+Console::shell();
