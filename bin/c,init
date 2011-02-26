@@ -19,7 +19,8 @@ pushd $1 > /dev/null
 rm -rf `ls -a | grep --color=never -Pv "^\.+$|^.htaccess$|^index.php$"`
 
 if [[ -d "$2" ]]; then
-	fpath=${0:0:${#0}-12}
+	script_path=$(readlink -f $0)
+	fpath=${script_path:0:${#script_path}-12}
 	apath=$(echo $2 | sed 's/\/$//g')
 	dpath=$(echo $3 | sed 's/\/$//g')
 	rm -f index.php
