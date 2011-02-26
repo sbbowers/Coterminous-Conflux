@@ -4,8 +4,10 @@ class ConsoleInteractive extends Console
 {
 	protected
 		$nesting_block = '',
+		$command = '',
 		$line = '',
 		$running = true;
+
 	public function __construct()
 	{
 		if (version_compare(phpversion(), "4.3.0", "<"))
@@ -20,18 +22,20 @@ class ConsoleInteractive extends Console
 		error_reporting(E_ALL | E_STRICT);
 		ob_implicit_flush(true);
 		readline_completion_function("ConsoleInteractive::complete");
+		pcntl_signal(SIGINT, array($this, "handle_interupt"));
 	}
 
 	public function start()
 	{
 		while($this->running)
 		{
-			$this->get_line();
-			if(!$this->get_command())
+			$this->get_command();
+
+			if(!$this->command_ready())
 				continue;
 
 			ob_start();
-			$__ret = eval($this->get_command());
+			$__ret = eval($this->command);
 			$__output = ob_get_contents();
 			ob_end_clean();
 
@@ -39,6 +43,7 @@ class ConsoleInteractive extends Console
 			echo Console::color('light green');
 			var_dump($__ret);
 			echo Console::color();
+			$this->command = '';
 		}
 	}
 
@@ -46,22 +51,34 @@ class ConsoleInteractive extends Console
 	{
 		return substr($this->nesting_block, -1) ?: '>';
 	}
+	protected function command_ready()
+	{
+		return $this->current_nest() == '>' && $this->command !== '';
+	}
 
 	// Read a line of input
-	protected function get_line()
+	protected function get_command()
 	{
-		$line = readline(Console::color('blue')."php".$this->current_nest()." ".Console::color());
-		if($line === false)
+		static $last_command = '';
+		$this->line = readline(Console::color('blue')."php".$this->current_nest()." ".Console::color());
+		pcntl_signal_dispatch();
+
+		if($this->line === false)
 			echo "\n" && exit();
 
-		if(strlen($line) == 0)
+		if(strlen($this->line) == 0)
 			return;
 
-		if($line != $this->line) // Add to history if applicable
+		while(strlen($this->line))
+			$this->command.= $this->get_tokens($this->line);
+
+		if($this->command_ready() && $last_command != $this->command)
 		{
-			readline_add_history($line);
-			$this->line = $line;
+			readline_add_history($this->command);
+			$last_command = $this->command;
 		}
+
+		$this->scrub_command();
 	}
 
 	// Parse out tokens for determining if php is valid
@@ -104,40 +121,16 @@ class ConsoleInteractive extends Console
 		}
 	}
 
-	// Looks to see if the current buffer contains a command and returns it
-	protected function get_command()
-	{
-		static $command = '';
-
-		if(!$this->line)
-			return $command;
-
-		if($this->current_nest() == '>')
-			$command = '';
-
-		while(strlen($this->line))
-			$command.= $this->get_tokens($this->line);
-
-		if($this->current_nest() != '>')
-			return '';
-
-		$command = $this->scrub_command($command);
-
-		return $command;
-	}
-
 	// Sanitize a command for semi-colons and alter it to return a value from eval if appropriate
-	protected function scrub_command($command)
+	protected function scrub_command()
 	{
-		$command = trim($command);
-		if(strpos($command, '{') === false)
+		$this->command = trim($this->command);
+		if(strpos($this->command, '{') === false)
 		{
-			$command = preg_replace('/[\s;]*$/', '', $command).';';
-			if(strpos($command, ';') == strlen($command) - 1 && !Regex::match('/^(echo|return)/', $command))
-				$command = 'return '.$command;
+			$this->command = preg_replace('/[\s;]*$/', '', $this->command).';';
+			if(strpos($this->command, ';') == strlen($this->command) - 1 && !Regex::match('/^(echo|return)/', $this->command))
+				$this->command = 'return '.$this->command;
 		}
-
-		return $command;
 	}
 
 	// Tab completion function for readline
@@ -147,6 +140,14 @@ class ConsoleInteractive extends Console
 		$constants = array_keys(get_defined_constants());
 		$funcions  = get_defined_functions();
 		return array_merge($constants, $variables, $funcions['internal'], $funcions['user']);
+	}
+
+	// Inturupt handler
+	public function handle_interupt()
+	{
+		$this->line = '';
+		$this->command = '';
+		$this->nesting_block = '';
 	}
 
 }
