@@ -64,7 +64,10 @@ class ConsoleInteractive extends Console
 		pcntl_signal_dispatch();
 
 		if($this->line === false)
-			echo "\n" && exit();
+		{
+			print "\n";
+			exit();
+		}
 
 		if(strlen($this->line) == 0)
 			return;
