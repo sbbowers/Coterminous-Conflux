@@ -89,17 +89,17 @@ class DatabasePostgres extends DatabaseVendor
       ORDER BY ordinal_position;";
 	}
 	
-	public function pkey_sql($table_name)
+	public function pkey_sql()
 	{
 		return "
 			SELECT table_constraints.table_schema as schema, table_constraints.table_name as table, key_column_usage.column_name as column
 			FROM information_schema.key_column_usage
 			JOIN information_schema.table_constraints USING (constraint_catalog, constraint_schema, constraint_name)
 			WHERE constraint_type='PRIMARY KEY'
-			ORDER BY key_column_usage.ordinal_position;"
+			ORDER BY key_column_usage.ordinal_position;";
 	}
 
-	public function fkey_sql($table_name)
+	public function fkey_sql()
 	{
 		return "
 			SELECT fkey.constraint_name as name, use.table_schema as schema, use.table_name as table, use.column_name as column, 
@@ -111,8 +111,7 @@ class DatabasePostgres extends DatabaseVendor
 			JOIN information_schema.key_column_usage  as use on (use.constraint_name=fkey.constraint_name)
 			WHERE 
 			pkey.constraint_type='PRIMARY KEY'
-			AND fkey.constraint_type='FOREIGN KEY'
-			AND col.table_name=".self::format($table_name, 'text');
+			AND fkey.constraint_type='FOREIGN KEY';";
 	}
 
 	public function get_last_column_default($table_name, $column_name)
