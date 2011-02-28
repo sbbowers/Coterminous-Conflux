@@ -1,20 +1,18 @@
 <?php
 
-/**
+/*
 	Base Class for Model abstraction of database tables
 	Provides basic CRUD operations on any table with primary keys
 	Extend your own to add functionality
-
 */
 
-class Model implements ArrayAccess, Iterator
+class Model extends Hash
 {
 	protected
 		$retrieved_from_db = false,
 		$database = null, 
 		$table_name = null,
 		$primary_key = null,
-		$row_data = array(), 
 		$errors = array(),
 		$filter_class = 'Filter',
 		$validate_class = 'Validate';
@@ -42,7 +40,7 @@ class Model implements ArrayAccess, Iterator
 
 		if(is_array($dataset) || is_object($dataset))
 			foreach($dataset as $key => $value)
-				$row_data[$key] = $value;
+				$hash_data[$key] = $value;
 	}
 
 	// Takes a row of information and pulls out the primary key definition.
@@ -82,7 +80,7 @@ class Model implements ArrayAccess, Iterator
 		if(count($res) != 1)
 			throw new Exception('failed to load model for table '.$this->table_name);
 	
-		$this->row_data = $res->fetch();
+		$this->hash_data = $res->fetch();
 		$this->retrieved_from_db = true;
 	}
 
@@ -90,7 +88,7 @@ class Model implements ArrayAccess, Iterator
 	{
 		if($this->retrieved_from_db) // use update
 		{
-			$data = $this->row_data;
+			$data = $this->hash_data;
 			foreach($this->primary_key as $key => $value)
 				unset($data[$key]);
 
@@ -105,7 +103,7 @@ class Model implements ArrayAccess, Iterator
 		else // use insert
 		{
 			$set = array();
-			foreach($this->row_data as $key => $value)
+			foreach($this->hash_data as $key => $value)
 				$set[$key] = Db::format($value, $this->table_name, $key, $this->database);
 						
 			$keys = implode(', ', array_keys($set));
@@ -134,8 +132,8 @@ class Model implements ArrayAccess, Iterator
 		$where = array();
 		foreach($pkey_def as $key)
 		{
-			if(isset($this->row_data[$key]))
-				$where[] = $key.'='.Db::format($this->row_data[$key], $this->table_name, $key, $this->database);
+			if(isset($this->hash_data[$key]))
+				$where[] = $key.'='.Db::format($this->hash_data[$key], $this->table_name, $key, $this->database);
 			else
 				$where[] = $key.'='.Db::get_last_column_default($this->table_name, $key);
 		}
@@ -145,7 +143,7 @@ class Model implements ArrayAccess, Iterator
 		if(count($res) != 1)
 			throw new Exception('failed to load model for table '.$this->table_name);
 	
-		$this->row_data = $res->fetch();
+		$this->hash_data = $res->fetch();
 		$this->retrieved_from_db = true;
 	}
 
@@ -223,75 +221,4 @@ class Model implements ArrayAccess, Iterator
     
   }
 
-  protected function input_name($field)
-  {
-    return $this->table_name."[".implode(',', $this->primary_key).']['.$field.']';
-  }
-
-  public function input($field)
-  {
-    $input = new Element('text');
-    $input->name = $this->input_name($field);
-//    $input->value = 
-    
-    
-//    new model('genres', array(id=>3, some=>yes)
-    
-//    genres[id:3,some:yes][field]=askj
-    
-    
-  }
-
-  // Implements ArrayAccess
-  public function offsetExists($offset)
-  {		foreach($primary_key as $key => $value)
-			$where[] = $key."=".Db::format($value, $this->table_name, $key, $this->database);
-
-    return isset($this->row_data[$offset]);			$data = $this->row_data;
-			foreach($this->scrub_key($data) as $key => $value)
-				unset($data[$key]);
-  }
-
-  public function offsetGet($offset)
-  {
-    return $this->row_data[$offset];
-  }
-
-  public function offsetSet($offset, $value)
-  {
-    $this->row_data[$offset] = $value;
-  }
-
-  public function offsetUnset($offset)
-  {
-    unset($this->row_data[$offset]);
-  }
-	
-	// Implements Iterator
-	function rewind()
-	{
-		reset($this->row_data);
-	}
-
-	function current()
-	{
-		return current($this->row_data);
-	}
-
-	function key()
-	{
-		return key($this->row_data);
-	}
-
-	function next()
-	{
-		return next($this->row_data);
-	}
-
-	function valid() 
-	{
-		return $this->current() !== false;
-	}
-
 }
-
