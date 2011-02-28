@@ -6,11 +6,11 @@ class DatabasePostgres extends DatabaseVendor
 		$config = null,
 		$con = null;
 
-//Mark Area
-//1
-//2
-	public function __construct($db_config)
+	public function __construct($db_config = null)
 	{
+		if($db_config === null)
+			return;
+
 		$this->config = $db_config;
 		$con_string = $this->get_connection_string();
 		$this->con = pg_connect($con_string, PGSQL_CONNECT_FORCE_NEW);
@@ -29,7 +29,7 @@ class DatabasePostgres extends DatabaseVendor
 			throw new Exception('Error Sending Query: '.pg_last_error($this->con));
 	}
 
-	public static function format($value, $type)
+	public function format($value, $type)
 	{
 		$type = strtolower($type);
 		switch($type)

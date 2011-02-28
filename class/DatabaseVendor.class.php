@@ -11,7 +11,7 @@ abstract class DatabaseVendor
 	public abstract function is_busy();
 
 	// Method for formatting column values for a column type
-	public static abstract function format($value, $type);
+	public abstract function format($value, $type);
 
 	// Builds the sql to define all columns of all tables in a database
 	// format of: (schema, table, column, required, type, default, text_length)
