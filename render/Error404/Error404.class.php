@@ -14,8 +14,8 @@ class Error404 extends Controller
 		$ret = array_pad(explode('/', $_GET['__route'], 3),3, null);
 		$controller = $ret[0];
 		$search = array();
-		$search[] = Auto::$APATH.'/render/';
-		$search[] = Auto::$FPATH.'/render/';
+		$search[] = Resolve::$APATH.'/render/';
+		$search[] = Resolve::$FPATH.'/render/';
 		foreach($search as $path)
 		{
 			$found = $this->isearch_dir($path, $controller);

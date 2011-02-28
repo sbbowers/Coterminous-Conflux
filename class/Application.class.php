@@ -29,7 +29,7 @@ class Application
 	{
 		$route = $_GET['__route'];
 		list($class, $action, $extra) = explode('/', $route, 3);
-		if(Auto::resolve($class))
+		if(Resolve::resolve($class))
 		{
 			$route = new $class();
 			if(is_subclass_of($route, 'Controller'))

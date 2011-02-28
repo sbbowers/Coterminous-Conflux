@@ -19,7 +19,7 @@ class Render implements ArrayAccess, Iterator
 	  do 
 	  {
 		  if(!is_file($template))
-			  $template = Auto::resolve_dir(get_class($this)).'/'.$template.'.php';
+			  $template = Resolve::resolve_dir(get_class($this)).'/'.$template.'.php';
       $class = get_parent_class($class);
     } 
     while($class && !is_file($template));
@@ -33,7 +33,7 @@ class Render implements ArrayAccess, Iterator
 	public function add_css($file, $media = 'all')
 	{
 		$class_name = get_class($this);
-		if(!is_file(Auto::resolve_dir($class_name).'/'.$file))
+		if(!is_file(Resolve::resolve_dir($class_name).'/'.$file))
 			throw new Exception($class_name.' does not have a '.$file);
 			
 		$file = $class_name.'/'.$file;
@@ -44,7 +44,7 @@ class Render implements ArrayAccess, Iterator
 	public function add_js($file)
 	{
 		$class_name = get_class($this);
-		if(!is_file(Auto::resolve_dir($class_name).'/'.$file))
+		if(!is_file(Resolve::resolve_dir($class_name).'/'.$file))
 			throw new Exception($class_name. ' does not have a '.$file);
 
 		$file = $class_name.'/'.$file;

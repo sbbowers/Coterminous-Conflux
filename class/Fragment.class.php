@@ -25,7 +25,7 @@ class Fragment implements ArrayAccess
 	public function render()
 	{
 		extract($this->parameters);
-		require Auto::resolve_class($this->template.'.tmpl.php');
+		require Resolve::resolve_class($this->template.'.tmpl.php');
 	}
 
 	public function get()

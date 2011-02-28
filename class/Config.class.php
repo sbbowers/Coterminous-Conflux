@@ -66,14 +66,14 @@ class Config
 		self::$config = (array)self::load($config_file) + (array)self::$config;
 		foreach($imports as $import)
 		{
-			self::import(Auto::resolve_yaml($import));
+			self::import(Resolve::config($import));
 		}
 	}
 
 	// Loads the default yaml file
 	public static function autoload()
 	{
-		$framework = Auto::resolve_yaml('framework');
+		$framework = Resolve::config('framework');
 		self::import($framework);
 	}
 

@@ -11,14 +11,14 @@ class Util
 
 	public static function get_version()
 	{
-		if(is_file(Auto::$FPATH.'/.version'))
-			$f_ver = file_get_contents(Auto::$FPATH.'/.version');
+		if(is_file(Resolve::$FPATH.'/.version'))
+			$f_ver = file_get_contents(Resolve::$FPATH.'/.version');
 		else
-			$f_ver = self::get_svn_version(Auto::$FPATH);
-		if(is_file(Auto::$APATH.'/.version'))
-			$a_ver = file_get_contents(Auto::$APATH.'/.version');
+			$f_ver = self::get_svn_version(Resolve::$FPATH);
+		if(is_file(Resolve::$APATH.'/.version'))
+			$a_ver = file_get_contents(Resolve::$APATH.'/.version');
 		else
-			$a_ver = self::get_svn_version(Auto::$APATH);
+			$a_ver = self::get_svn_version(Resolve::$APATH);
 
 		$ver = $f_ver.'-'.$a_ver;
 		if(!$f_ver && !$a_ver)
