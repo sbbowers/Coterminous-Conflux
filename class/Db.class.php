@@ -35,6 +35,12 @@ class Db
 		return new DatabaseResult($con_id, $sql, $database);
 	}
 
+	// List all database connections available
+	public static function enum()
+	{
+		return array_keys(Config::get('connection','available'));
+	}
+
 	// Format your value based off of the type of column
 	public static function format($value, $table, $column, $database = null)
 	{
@@ -51,7 +57,7 @@ class Db
 			return $desc[$column]['data_type'];
 	}
 
-	private static function resolve_db_name($database)
+	public static function resolve_db_name($database)
 	{
 		if(is_null($database))
 			$database = 'easy_connection';
@@ -144,12 +150,18 @@ class Db
 		return $con_id;
 	}
 
-	private static function get_vendor_type($database = null)
+	public static function get_vendor_type($database = null)
 	{
 		$vendor_config = self::get_db_config($database);
     return $vendor_config['db_vendor'];
 	}
 
+	public static function get_vendor($database = null)
+	{
+		$vendor_config = self::get_db_config($database);
+		$vendor = $vendor_config['db_vendor'];
+		return new $vendor();
+	}
 
 	private static function get_new_con_id()
 	{
@@ -160,55 +172,9 @@ class Db
 	{
 		if(array_key_exists($database, self::$db_configs))
 			return self::$db_configs[$database];
-		self::$db_configs[$database] = Config::find('connection', $database);
+		self::$db_configs[$database] = Config::find('connection','available', $database);
 		return self::$db_configs[$database];
 	}
-	
-	private static function get_vender_type($database)
-	{
-		$db_config = self::get_db_config($database);
-		if(is_null($db_config))
-			throw new Exception('Database '.$database.' Does Not Exist');
-		if(!array_key_exists('db_vender', $db_config))
-			throw new Exception('Databse Vender Not Defined For Database '.$database);
-		return $db_config['db_vender'];
-	}
-
-	public static function list_tables($database = null)
-	{
-		$database = self::resolve_db_name($database);
-		$vendor_type = self::get_vendor_type($database);
-    $sql = $vendor_type::list_tables_sql();
-    return Db::exec($sql, $database);
-	}
-	public static function desc_table($table_name, $database = null)
-	{
-		$database = self::resolve_db_name($database);
-		$vendor_type = self::get_vendor_type($database);
-		$sql = $vendor_type::table_sql($table_name);
-		$desc = Db::exec($sql, $database)->fetch_all();
-
-		$ret = array();
-		foreach($desc as $column)
-			$ret[$column['column_name']] = $column;
-
-		return $ret;
-	}
-	public static function get_pkey($table_name, $database = null)
-	{
-		$database = self::resolve_db_name($database);
-		$vendor_type = self::get_vendor_type($database);
-    $sql = $vendor_type::pkey_sql($table_name);
-    return Db::exec($sql, $database)->fetch_column('column_name');
-	}
-
-  public static function get_references($table_name, $database = null)
-  {
-		$database = self::resolve_db_name($database);
-    $vendor_type = self::get_vendor_type($database);
-    $sql = $vendor_type::reference_sql($table_name);
-    return Db::exec($sql, $database);
-  }
 
   public static function get_last_column_default($table_name, $column_name, $database = null)
   {
