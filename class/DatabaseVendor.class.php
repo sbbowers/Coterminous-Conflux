@@ -13,17 +13,17 @@ abstract class DatabaseVendor
 	// Method for formatting column values for a column type
 	public static abstract function format($value, $type);
 
-	// Builds the sql to list all of the tables in the database
-	public abstract function list_tables_sql();
+	// Builds the sql to define all columns of all tables in a database
+	// format of: (schema, table, column, required, type, default, text_length)
+	public abstract function schema_sql();
 
-	// Builds the sql to define a table (column information)
-	public abstract function table_sql($table_name);
+	// Builds the sql to determine the primary key of all tables
+	// format of: (schema, table, column)
+	public abstract function pkey_sql();
 
-	// Builds the sql to determine the primary key of a table
-	public abstract function pkey_sql($table_name);
-
-	// Builds the sql to determine what tables reference this one
-	public abstract function reference_sql($table_name);
+	// Builds the sql to determine all foreign keys
+	// format of: (name, schema, table, column, ref_schema, ref_table, ref_column)
+	public abstract function fkey_sql();
 
 	// Gets the sql clause to retreive the last value from a sequence
 	// Used after an insert to propagate the model with the primary keys
