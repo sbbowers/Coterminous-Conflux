@@ -24,6 +24,16 @@ class Schema
 		return self::lookup('tables', $table, $database);
 	}
 
+	// Returns a table definition
+	public static function column_type($table, $column, $database = null)
+	{
+		$database = Db::resolve_db_name($database);
+		self::generate_schema($database);
+
+		if(isset(self::$databases[$database]['tables'][$table][$column]))
+			return self::$databases[$database]['tables'][$table][$column]['type'];
+	}	
+
 	// Returns an array of columns that comprise the primary key of a table
 	public static function primary_key($table, $database = null)
 	{
@@ -66,7 +76,7 @@ class Schema
 
 				$schema = Db::exec($vendor->schema_sql(), $db);
 				foreach($schema as $column)
-					self::$databases[$db]['tables'][$column['table']][] = $column;
+					self::$databases[$db]['tables'][$column['table']][$column['column']] = $column;
 
 				$pkeys = Db::exec($vendor->pkey_sql(), $db);
 				foreach($pkeys as $key)

@@ -47,8 +47,8 @@ class Model extends Hash
 	// returns the primary key array.
 	protected function set_pkey($primary_key)
 	{
-		$pkey_def = Db::get_pkey($this->table_name, $this->database);
-		if(is_string($primary_key))
+		$pkey_def = Schema::primary_key($this->table_name, $this->database);
+		if(!is_array($primary_key))
 		{
 			list(,$column_name) = each($pkey_def);
 			$primary_key = array($column_name => $primary_key);
@@ -126,8 +126,8 @@ class Model extends Hash
 	// After an insert, load_last_insert is used to reload the data from sequence values if necessary
 	private function load_last_insert()
 	{
-		$pkey_def = Db::get_pkey($this->table_name, $this->database);
-		$desc = Db::desc_table($this->table_name, $this->database);
+		$pkey_def = Schema::primary_key($this->table_name, $this->database);
+		$desc = Schema::define($this->table_name, $this->database);
 
 		$where = array();
 		foreach($pkey_def as $key)

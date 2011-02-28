@@ -45,16 +45,8 @@ class Db
 	public static function format($value, $table, $column, $database = null)
 	{
 		$database = self::resolve_db_name($database);
-		$vendor_type = self::get_vendor_type($database);
-		$type = self::get_type($table, $column);
-		return $vendor_type::format($value, $type);
-	}
-
-	protected static function get_type($table, $column)
-	{
-		$desc = self::desc_table($table);
-		if(isset($desc[$column]))		
-			return $desc[$column]['data_type'];
+		$type = Schema::column_type($table, $column, $database);
+		return self::get_vendor()->format($value, $type);
 	}
 
 	public static function resolve_db_name($database)
@@ -152,12 +144,14 @@ class Db
 
 	public static function get_vendor_type($database = null)
 	{
+		$database = self::resolve_db_name($database);
 		$vendor_config = self::get_db_config($database);
     return $vendor_config['db_vendor'];
 	}
 
 	public static function get_vendor($database = null)
 	{
+		$database = self::resolve_db_name($database);
 		$vendor_config = self::get_db_config($database);
 		$vendor = $vendor_config['db_vendor'];
 		return new $vendor();
