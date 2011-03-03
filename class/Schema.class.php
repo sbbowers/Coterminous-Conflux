@@ -9,13 +9,29 @@ class Schema
 		$databases = array();
 
 	// List all tables in a database
-	public static function list_tables($database = null)
+	public static function tables($database = null)
 	{
 		$database = Db::resolve_db_name($database);
 		self::generate_schema($database);
 
 		if(isset(self::$databases[$database]['tables']))
 			return array_keys(self::$databases[$database]['tables']);
+	}
+
+	// Gets the model name for a table
+	public static function model_name($table, $database = null)
+	{
+		return self::lookup('models', $table, $database);
+	}
+
+	// List all of the models 
+	public static function models($database = null)
+	{
+		$database = Db::resolve_db_name($database);
+		self::generate_schema($database);
+
+		if(isset(self::$databases[$database]['models']))
+			return self::$databases[$database]['models'];
 	}
 
 	// Returns a table definition
@@ -50,7 +66,7 @@ class Schema
 	public static function children($table, $database = null)
 	{
 		return self::lookup('children', $table, $database);
-	}	
+	}
 
 	// Helper
 	protected static function lookup($type, $table, $database = null)
@@ -90,8 +106,25 @@ class Schema
 					self::$databases[$db]['parents'][$key['table']][$key['ref_table']] = "{$key['table']}.{$key['column']} = {$key['ref_table']}.{$key['ref_column']}";
 					self::$databases[$db]['children'][$key['ref_table']][$key['table']] = "{$key['table']}.{$key['column']} = {$key['ref_table']}.{$key['ref_column']}";
 				}
+
+				// Generate model names
+				foreach(self::$databases as $db => $data)
+				{
+					foreach($data['tables'] as $table => $schema)
+						self::$databases[$db]['models'][$table] = self::gen_model_name($table);
+				}
+
 			}
 			catch (Exception $e) {}
 		}
 	}
+
+	protected static function gen_model_name($table)
+	{
+		$tokens = preg_split('/(?<!^|[a-z])(?=[a-z])/', strtolower($table));
+		$tokens = preg_replace('/[^a-z0-9]/', '', $tokens);
+		if(!Regex::match('/^[a-zA-Z]/', $tokens[0]))
+			$tokens[0] = 'm'.$tokens[0];
+		return implode('', array_map(function($token){return ucwords($token);}, $tokens));
+	}		
 }
