@@ -132,6 +132,10 @@ class Resolve
 		$file = self::class_name($class);
 		if($file)
 			require_once $file;
+		
+		// Call static autoload function if defined
+		if(is_callable($class.'::__autoload'))
+		  $class::__autoload();
 	}
 }
 
