@@ -12,8 +12,6 @@ class Schema
 	public static function tables($database = null)
 	{
 		$database = Db::resolve_db_name($database);
-		self::generate_schema($database);
-
 		if(isset(self::$databases[$database]['tables']))
 			return array_keys(self::$databases[$database]['tables']);
 	}
@@ -28,8 +26,6 @@ class Schema
 	public static function models($database = null)
 	{
 		$database = Db::resolve_db_name($database);
-		self::generate_schema($database);
-
 		if(isset(self::$databases[$database]['models']))
 			return self::$databases[$database]['models'];
 	}
@@ -44,8 +40,6 @@ class Schema
 	public static function column_type($table, $column, $database = null)
 	{
 		$database = Db::resolve_db_name($database);
-		self::generate_schema($database);
-
 		if(isset(self::$databases[$database]['tables'][$table][$column]))
 			return self::$databases[$database]['tables'][$table][$column]['type'];
 	}	
@@ -72,14 +66,12 @@ class Schema
 	protected static function lookup($type, $table, $database = null)
 	{
 		$database = Db::resolve_db_name($database);
-		self::generate_schema($database);
-
 		if(isset(self::$databases[$database][$type][$table]))
 			return self::$databases[$database][$type][$table];
 	}	
 
 	// Builds all of the look up data
-	protected static function generate_schema($database)
+	public static function __autoload()
 	{
 		if(self::$databases)
 			return;
