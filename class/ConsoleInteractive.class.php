@@ -23,6 +23,7 @@ class ConsoleInteractive extends Console
 		ob_implicit_flush(true);
 		readline_completion_function("ConsoleInteractive::complete");
 		pcntl_signal(SIGINT, array($this, "handle_interupt"));
+		readline_read_history(getenv('HOME').'/.coterminousconflux/console_history');
 	}
 
 	public function start()
@@ -45,6 +46,19 @@ class ConsoleInteractive extends Console
 			echo Console::color();
 			$this->command = '';
 		}
+	}
+	public function __destruct()
+	{
+		$dir = getenv('HOME').'/.coterminousconflux';
+
+		if(!file_exists($dir))
+			mkdir($dir);
+		readline_write_history($dir.'/console_history');
+
+		$f = file($dir.'/console_history');
+		$t = array_shift($f);
+		$f = implode('', array_slice($f, -1000));
+		file_put_contents($dir.'/console_history', $t.$f);
 	}
 
 	protected function current_nest()
