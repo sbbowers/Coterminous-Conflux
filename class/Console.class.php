@@ -26,10 +26,15 @@ class Console
 
 	public static function out($text, $color_desc = null)
 	{
+		print Console::text($text, $color_desc);
+	}
+
+	public static function text($text, $color_desc = null)
+	{
 		if($color_desc)
-			print Console::color($color_desc).$text.Console::color();
+			return Console::color($color_desc).$text.Console::color();
 		else
-			print $text;
+			return $text;
 	}
 
 	public static function color($color_desc = 'white on transparent')
