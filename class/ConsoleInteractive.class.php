@@ -83,9 +83,6 @@ class ConsoleInteractive extends Console
 			exit();
 		}
 
-		if(strlen($this->line) == 0)
-			return;
-
 		while(strlen($this->line))
 			$this->command.= $this->get_tokens($this->line);
 
@@ -141,10 +138,12 @@ class ConsoleInteractive extends Console
 	// Sanitize a command for semi-colons and alter it to return a value from eval if appropriate
 	protected function scrub_command()
 	{
-		$this->command = trim($this->command);
 		if(strpos($this->command, '{') === false)
 		{
-			$this->command = preg_replace('/[\s;]*$/', '', $this->command).';';
+			if(in_array($this->current_nest(),array('"','\'')))
+				$this->command = $this->command."\n";
+			if($this->current_nest() == '>')
+				$this->command = preg_replace('/[\s;]*$/', '', $this->command).';';
 			if(strpos($this->command, ';') == strlen($this->command) - 1 && !Regex::match('/^(echo|return)/', $this->command))
 				$this->command = 'return '.$this->command;
 		}
