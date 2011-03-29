@@ -1,0 +1,29 @@
+COPYRIGHTS
+==========
+
+Coterminous Conflux
+-------------------
+
+Coterminous Conflux is built and maintained by Scott Bowers and Mark Trimmer
+
+Url: https://github.com/sbbowers/Coterminous-Conflux
+Copyright: Scott Bowers, Mark Trimmer
+License:   MIT (doc/license.txt)
+
+Symfony
+-------
+
+Coterminous Conflux contains parts of the symfony framework
+
+Url:       http://www.symfony-project.com/
+Copyright: Fabien Potencier
+License:   MIT (class/Symfony/LICENSE)
+
+Minify
+-------
+
+Coterminous Conflux contains the Minify utility
+
+Url:       http://code.google.com/p/minify/
+Copyright: Ryan Grove, Steve Clay
+License:   BSD (extension/Minify/LICENSE.txt)
