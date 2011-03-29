@@ -1,0 +1,15 @@
+#!/usr/bin/php
+<?php
+
+require dirname(__DIR__).'/class/Resolve.class.php';
+
+list(, $command) = $argv + array(null, null);
+
+if(!$command)
+{
+	$s = new Scaffold();
+	$s->help(); 
+	exit;
+}	
+
+Scaffold::build($command);

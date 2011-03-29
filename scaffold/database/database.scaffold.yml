@@ -1,0 +1,15 @@
+description: Configuration file for a new database
+options:
+  "database::":
+    prompt: name of the database
+  "vendor::":
+    prompt: database vendor
+    values: [Postgres, Mysql]
+  "host::":
+    prompt: host the database listens on
+  "port::":
+    prompt: port the database listens on
+  "user::":
+    prompt: user to connect as
+  "password::":
+    prompt: password used to connect

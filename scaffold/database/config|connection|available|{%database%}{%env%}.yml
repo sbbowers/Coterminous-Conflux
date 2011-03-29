@@ -1,0 +1,8 @@
+{%database%}:
+  db_vendor: Database{%vendor%}
+  max_cons: 1
+  host: {%host%}
+  dbname: {%database%}
+  user: {%user%}
+  password: {%password%}
+  port: {%port%}
