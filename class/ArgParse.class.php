@@ -121,7 +121,7 @@ class ArgParse
 			$short = Regex::select('/[^:]/', $this->arguments[$arg][1]);
 			if($short)
 				$short="-$short,";
-			printf("  %3s --%-{$width}s %s\n", $short, $param, $this->arguments[$arg][2]);
+			printf("  %3s --%-{$width}s %s\n", $short, str_replace(':','',$param), $this->arguments[$arg][2]);
 		}
 	}
 

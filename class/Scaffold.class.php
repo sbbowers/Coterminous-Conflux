@@ -45,13 +45,7 @@ class Scaffold
 		{
 			$opts = $this->get_options($command);
 			$gopt = new GetOpt(implode($opts), array_keys($opts));
-			var_dump($gopt->values());
-			var_dump($gopt->extra());			
 		}
-
-
-
-
 	}
 
 	protected function get_recipe_config($command = null)
@@ -85,15 +79,22 @@ class Scaffold
 		echo "Usage: c,create <recipe> [-h|--help] [[--<option>=<value>|-<o>=<v>]...]\n\n";
 		echo "Available Recipes:\n";
 
+		$command_width = max(array_map(function($t){return strlen(str_replace(':','',$t));}, self::$commands));
+
 		foreach(self::$commands as $command)
 		{
 			$config = $this->get_recipe_config($command);
-			printf("  %-24s %s\n", $command, @$config['description']);
+			printf("  %-{$command_width}s  %s\n", $command, @$config['description']);
 
 			if(isset($config['options']))
 			{
+				$width = max(array_map(function($t){return strlen(str_replace(':','',$t));}, array_keys($config['options'])))+1;
 				foreach($config['options'] as $var => $info)
-					print str_pad('',27).sprintf("%3s--%-16s %s\n", isset($info['short_opt']) ? "-$info[short_opt]|":'', $var, @$info['description'] ?: $info['prompt']);
+				{
+					print str_pad('',$command_width+6);
+					$short_opt = isset($info['short_opt']) ? "-$info[short_opt]|":'';
+					printf("%3s--%-{$width}s %s\n", $short_opt, str_replace(':','',$var), @$info['description'] ?: $info['prompt']);
+				}
 			}
 		}
 		exit;
