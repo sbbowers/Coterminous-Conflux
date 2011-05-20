@@ -1,7 +1,7 @@
 #!/usr/bin/php
 <?php
 
-require dirname(__DIR__).'/class/Resolve.class.php';
+require dirname(__DIR__).'/class/Auto.class.php';
 
 list(, $command) = $argv + array(null, null);
 
