@@ -6,6 +6,7 @@ class Console
 	{
 
 		Console::out(`php -v | head -1`, 'gray');
+		self::detect_symfony();
 		$c = new ConsoleInteractive();
 		$c->start();
 	}	
@@ -101,4 +102,23 @@ class Console
 		
 		return "\033[{$back};{$fore}m";
 	}
+
+	protected static function detect_symfony()
+	{
+		list($root, $app, $env, $debug) = explode(':', getenv('COTERMINOUS_SYMFONY')) + array(null, null, null, 1);
+		if($root && $app && $env) // integrate with symfony
+		{
+			define('SF_ROOT_DIR',    $root);
+			define('SF_APP',         $app);
+			define('SF_ENVIRONMENT', $env);
+			define('SF_DEBUG',       $debug);
+
+			require_once(SF_ROOT_DIR.DIRECTORY_SEPARATOR.'apps'.DIRECTORY_SEPARATOR.SF_APP.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.'config.php');
+			// initialize database manager
+			$databaseManager = new sfDatabaseManager();
+			$databaseManager->initialize();
+			Console::out('Symfony environment detected: '.getenv('COTERMINOUS_SYMFONY')."\n", 'gray');
+		}
+	}
+
 }
