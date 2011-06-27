@@ -42,13 +42,13 @@ class Auto
 
 		foreach($dirs as $dir)
 		{
-			$files = explode("\n", `find $dir |grep -P '\.php$' | xargs grep -P '^\s*class\s+\w+|^\s*namespace\s+\w+|^\s*interface\s+\w+'`);
+			$files = explode("\n", `find $dir |grep -P '\.php$' | xargs grep -P '^\s*class\s+\w+|^\s*namespace\s+\w+|^\s*interface\s+\w+|^\s*abstract\s+class\s+\w+'`);
 			foreach($files as $file)
 			{
 				if(preg_match('/(.*):\s*namespace\s+(\w+)/', $file, $matches))
 					list(,$ns_file,$ns) = $matches;
 
-				if(preg_match('/(.*):\s*(class|interface)\s+(\w+)/', $file, $matches))
+				if(preg_match('/(.*):\s*(class|interface|abstract\s+class)\s+(\w+)/', $file, $matches))
 				{
 					list(, $c_file, ,$class) = $matches;
 				
