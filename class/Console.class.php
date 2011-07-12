@@ -122,14 +122,26 @@ class Console
 			define('SF_ENVIRONMENT', $env);
 			define('SF_DEBUG',       $debug);
 
-			require_once(SF_ROOT_DIR.DIRECTORY_SEPARATOR.'apps'.DIRECTORY_SEPARATOR.SF_APP.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.'config.php');
-			// initialize database manager
-			$databaseManager = new sfDatabaseManager();
-			$databaseManager->initialize();
-			Console::out('Symfony environment detected: '.$config."\n", 'gray');
+			$file = SF_ROOT_DIR.DIRECTORY_SEPARATOR.'apps'.DIRECTORY_SEPARATOR.SF_APP.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR.'config.php';
+
+			if(file_exists($file))
+			{
+				try
+				{
+					require_once($file);
+					// initialize database manager
+					$databaseManager = new sfDatabaseManager();
+					$databaseManager->initialize();
+					Console::out('Symfony environment detected: '.$config."\n", 'gray');
+					return;
+				}
+				catch (Exception $e) { echo $e; }
+			}
+			else
+				return Console::out('Failed to load Symfony environment "'.$config.'". Does the symfony directory '.$root.' exist?'."\n", 'red');
 		}
-		else
-			Console::out('Failed to load Symfony environment "'.$config.'": Did you follow the correct format of "dir:app:env:debug"?'."\n", 'red');
+		
+		Console::out('Failed to load Symfony environment "'.$config.'". Did you follow the correct format of "dir:app:env:debug"?'."\n", 'red');
 	}
 
 }
