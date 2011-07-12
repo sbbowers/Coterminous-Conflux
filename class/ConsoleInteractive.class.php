@@ -36,7 +36,14 @@ class ConsoleInteractive extends Console
 				continue;
 
 			ob_start();
-			$__ret = eval($this->command);
+			try 
+			{
+				$__ret = eval($this->command);
+			}
+			catch (Exception $e)
+			{
+				echo $e;
+			}
 			$__output = ob_get_contents();
 			ob_end_clean();
 
