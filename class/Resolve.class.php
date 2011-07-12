@@ -6,9 +6,6 @@
 
 class Resolve 
 {	
-	public static
-		$APATH = null,
-		$FPATH = null;
 	private static
 		$disable_cache_processing = false,
 		$class_files = array(),
@@ -35,38 +32,7 @@ class Resolve
 
 		return $files;
 	}  
-
-	// Set up initial framework search paths
-	public static function startup()
-	{
-		self::$APATH = getenv('APATH');
-		self::$FPATH = getenv('FPATH');
-
-		// For CLI support
-		if(!self::$FPATH)
-			self::$FPATH = dirname(__DIR__);
-	
-		spl_autoload_register(array('Resolve', 'load'));
-
-		if(!self::$disable_cache_processing)
-			self::cache_files();
-	}
-
-	public static function class_name($class)
-	{
-		if(in_array($class, self::$class_files))
-			return self::$class_files[$class];
-			
-		$class = str_replace('\\', '/', $class);
-		$search = array(
-			self::$APATH.'/class/'.$class.'.class.php',
-			self::$FPATH.'/class/'.$class.'.class.php',
-			self::$APATH.'/render/'.$class.'/'.$class.'.class.php',
-			self::$FPATH.'/render/'.$class.'/'.$class.'.class.php',
-			);
-		return self::resolve_file($class, 'class', $search);
-	}
-
+/*
 	public static function config($yaml)
 	{
 		$search = array(
@@ -96,48 +62,25 @@ class Resolve
 				return $file;
 			}
 	}
+
 	private static function cache_files()
 	{
 		// Simple mutex to prevent recursion
 		self::$disable_cache_processing = true;
-
-		$search = array(
-			self::$APATH.'/class',
-			self::$FPATH.'/class',
-			self::$APATH.'/render',
-			self::$FPATH.'/render',
-			);
-		
-		$files = array();
-		foreach($search as $dir)
-			$files = array_merge($files, self::glob('*.class.php', $dir));
-
-		foreach($files as $file)
-		{
-			preg_match('/(\w+)\.class\.php$/', $file, $matches);
-			if(isset($matches[1]))
-				self::$cached_files['class'][$matches[1]] = $file;
-		}
+		self::$cached_files['class'] = self::find_classes();
 		self::$disable_cache_processing = false;
+	}
+*/
+	// Return a class file
+	public static function class_file($class)
+	{
+		return Auto::resolve_class($class);
 	}
 
 	// Return the directory of a class
-	public static function resolve_dir($class)
+	public static function class_dir($class)
 	{
-		return dirname(self::class_name($class));
-	}
-
-	public static function load($class)
-	{
-		$file = self::class_name($class);
-		if($file)
-			require_once $file;
-		
-		// Call static autoload function if defined
-		if(is_callable($class.'::__autoload'))
-		  $class::__autoload();
+		return dirname(Auto::resolve_class($class));
 	}
 }
 
-// Startup the autoloader
-Resolve::startup();

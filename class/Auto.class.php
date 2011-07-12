@@ -62,10 +62,10 @@ class Auto
 	}
 
 	// Return the directory of a class
-	public static function resolve_dir($class)
+	public static function resolve_class($class)
 	{
 		if(isset(self::$classes[$class]))
-			return dirname(self::$classes[$class]);
+			return self::$classes[$class];
 	}
 
 	public static function load($class)
