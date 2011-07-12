@@ -4,9 +4,12 @@ class Console
 {
 	public static function shell()
 	{
+		$a = new ArgParse('Interactive Shell for Coterminous Conflux');
+		$a->add_optional_argument('symfony_dir', 'Load symfony environment defined by "dir:app:env:debug"; if <value> left blank, load from env variable $COTERMINOUS_SYMFONY');
+		$opts = $a->parse();
 
 		Console::out(`php -v | head -1`, 'gray');
-		self::detect_symfony();
+		self::detect_symfony($opts);
 		$c = new ConsoleInteractive();
 		$c->start();
 	}	
@@ -103,9 +106,15 @@ class Console
 		return "\033[{$back};{$fore}m";
 	}
 
-	protected static function detect_symfony()
+	protected static function detect_symfony($opts)
 	{
-		list($root, $app, $env, $debug) = explode(':', getenv('COTERMINOUS_SYMFONY')) + array(null, null, null, 1);
+		if(!array_key_exists('symfony_dir', $opts))
+			return;
+
+		$config = $opts['symfony_dir'] ? $opts['symfony_dir'] : getenv('COTERMINOUS_SYMFONY');
+
+		list($root, $app, $env, $debug) = explode(':', $config) + array(null, null, null, 1);
+
 		if($root && $app && $env) // integrate with symfony
 		{
 			define('SF_ROOT_DIR',    $root);
@@ -117,8 +126,10 @@ class Console
 			// initialize database manager
 			$databaseManager = new sfDatabaseManager();
 			$databaseManager->initialize();
-			Console::out('Symfony environment detected: '.getenv('COTERMINOUS_SYMFONY')."\n", 'gray');
+			Console::out('Symfony environment detected: '.$config."\n", 'gray');
 		}
+		else
+			Console::out('Failed to load Symfony environment "'.$config.'": Did you follow the correct format of "dir:app:env:debug"?'."\n", 'red');
 	}
 
 }
