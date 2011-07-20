@@ -1,17 +1,13 @@
 <?php
-// Class Resolve - Resolve files and automatically load classes
-//	Supports framework directory specified by FPATH environment variable
-//	Supports application directory specified by APATH environment variable
-//  Supports data directory specified by DPATH environment variable
+// Class Resolve - Resolve common files types
+// Searches Application and Framework directories and returns the appropriate file
 
-class Resolve 
-{	
+class Resolve
+{
 	private static
-		$disable_cache_processing = false,
-		$class_files = array(),
 		$cached_files = array();
 
-		
+
 	// Reserved for implementing cached file existance to avoid hitting the filesystem
 	public static function exists($file)
 	{
@@ -31,21 +27,13 @@ class Resolve
 		}
 
 		return $files;
-	}  
-/*
+	}
+
 	public static function config($yaml)
 	{
 		$search = array(
-			self::$APATH.'/config/'.$yaml.'.yml',
-			self::$FPATH.'/config/'.$yaml.'.yml',
-			);
-		return self::resolve_file($yaml, 'yaml', $search);
-	}
-
-	public static function scaffold($yaml)
-	{
-		$search = array(
-			self::$FPATH.'/scaffold/'.$yaml.'.yml',
+			Auto::$APATH.'/config/'.$yaml.'.yml',
+			Auto::$FPATH.'/config/'.$yaml.'.yml',
 			);
 		return self::resolve_file($yaml, 'yaml', $search);
 	}
@@ -63,14 +51,6 @@ class Resolve
 			}
 	}
 
-	private static function cache_files()
-	{
-		// Simple mutex to prevent recursion
-		self::$disable_cache_processing = true;
-		self::$cached_files['class'] = self::find_classes();
-		self::$disable_cache_processing = false;
-	}
-*/
 	// Return a class file
 	public static function class_file($class)
 	{
