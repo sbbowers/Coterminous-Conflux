@@ -1,15 +1,15 @@
-description: Configuration file for a new database
+description: Build a database configuration file
 options:
-  "database::":
-    prompt: name of the database
-  "vendor::":
-    prompt: database vendor
+  "database":
+    description: name of the database
+  "vendor":
+    description: database vendor
     values: [Postgres, Mysql]
-  "host::":
-    prompt: host the database listens on
-  "port::":
-    prompt: port the database listens on
-  "user::":
-    prompt: user to connect as
-  "password::":
-    prompt: password used to connect
+  "host":
+    description: host the database listens on
+  "port":
+    description: port the database listens on
+  "user":
+    description: user to connect as
+  "password":
+    description: password used to connect
