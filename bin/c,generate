@@ -3,13 +3,4 @@
 
 require dirname(__DIR__).'/class/Auto.class.php';
 
-list(, $command) = $argv + array(null, null);
-
-if(!$command)
-{
-	$s = new Scaffold();
-	$s->help(); 
-	exit;
-}	
-
-Scaffold::build($command);
+Recipe::build($argv);
