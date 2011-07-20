@@ -106,6 +106,20 @@ class Console
 		return "\033[{$back};{$fore}m";
 	}
 
+	public static function get_width()
+	{
+		preg_match_all("/columns.([0-9]+)/", exec('stty -a |grep columns'), $output);
+		if($output)
+			return $output[1][0];
+	}
+
+	public static function get_height()
+	{
+		preg_match_all("/rows.([0-9]+)/", exec('stty -a |grep rows'), $output);
+		if($output)
+			return $output[1][0];
+	}
+
 	protected static function detect_symfony($opts)
 	{
 		if(!array_key_exists('symfony_dir', $opts))
