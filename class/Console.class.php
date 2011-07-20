@@ -24,8 +24,8 @@ class Console
 
 		if($default_answer !== null && $response != '')
 			return $default_answer;
-			
-		return $response;
+
+		return str_replace("\n", '', $response);
 	}
 
 	public static function out($text, $color_desc = null)
