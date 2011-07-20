@@ -33,11 +33,8 @@ Run as: `myApplication --help`:
 class ArgParse
 {
 	protected
-		$values = array(),
-		$extra = array(),
-		$shorts = array(),
+		$shorts = '',
 		$arguments = array(),
-		$ordered_args = array(),
 		$description;
 
 	public function __construct($description, $help = true)
@@ -49,91 +46,156 @@ class ArgParse
 
 	public function add_flag_argument($param, $help = '')
 	{
-		$this->add_argument($param, $help, '');
+		$this->add_argument($param, $help, ArgParseArgument::FLAG);
 	}
 
 	public function add_optional_argument($param, $help = '')
 	{
-		$this->add_argument($param, $help, ':');
+		$this->add_argument($param, $help, ArgParseArgument::OPTIONAL);
 	}
 
 	public function add_required_argument($param, $help = '')
 	{
-		$this->add_argument($param, $help, '::');
+		$this->add_argument($param, $help, ArgParseArgument::REQIRED);
 	}
 
 	public function add_ordered_argument($param, $help = '')
 	{
-		$this->ordered_args[$param] = $help;
+		$this->add_argument($param, $help, ArgParseArgument::ORDERED);
 	}
 
-	public function parse()
+	public function parse($exit_help = true)
 	{
-		$long_opts = array_map(function($t){return $t[0];}, $this->arguments);
-		$short_opts = array_map(function($t){return $t[1];}, $this->arguments);
+		$ret = array();
+		$long_opts = array_filter(array_map(function($a){return $a->get_long();}, $this->arguments), 'trim');
+		$short_opts = array_filter(array_map(function($a){return $a->get_short();}, $this->arguments), 'trim');
+		$ordered_opts = array_filter($this->arguments, function($a){return $a->type == ArgParseArgument::ORDERED;});
+		$ordered_opts = array_map(function($a){return $a->name;}, $ordered_opts);	
 
 		$gopt = new GetOpt(implode($short_opts), $long_opts);
 		foreach($gopt->values() as $key => $value)
 		{
-			if(isset($this->shorts[$key]))
-				$this->values[$this->shorts[$key]] = $value;
-			else
-				$this->values[$key] = $value;
+			foreach($this->arguments as $arg)
+			{
+				$tmp = $arg->matches($key);
+				if($tmp)
+				{
+					$ret[$tmp] = $value;
+					break;
+				}
+			}
 		}
-		$this->extra = $gopt->extra();
+		foreach($gopt->extra() as $value)
+		{
+			if(!$ordered_opts)
+				break;
+			$ret[array_shift($ordered_opts)] = $value;
+		}
 
-		if(array_key_exists('help', $this->values))
+		if($exit_help && array_key_exists('help', $ret))
 		{
 			$this->help();
 			exit();
 		}
 
-		return array_merge($this->values, $this->extra);
+		return $ret;
 	}
 
 	public function help()
 	{
 		global $argv;
-		$name = Regex::select('/[^\/]+$/', $argv[0]);
-		$argparam = array();
-
-		print "Usage: $name";
-		foreach($this->ordered_args as $arg => $help)
-			print " <$arg>";
-
-		foreach($this->arguments as $arg => $opts)
-			switch(Regex::select('/:*$/', $opts[0]))
-			{
-				case '':   $argparam[$arg] = $arg; break;
-				case ':':  $argparam[$arg] = $arg."[=<value>]"; break;
-				case '::': $argparam[$arg] = $arg."=<value>"; break;
-			}
-
-		foreach($argparam as $param)
-			print " [--$param]";
-
+		print "Usage: ".basename($argv[0])." ".implode(' ', array_map(function($a){return $a->get_inline_format();}, $this->arguments));
 		print "\n\n$this->description\n\n";
 
-		$width = max(array_map(function($t){return strlen($t);}, $argparam));
 
-		foreach($argparam as $arg => $param)
-		{
-			$short = Regex::select('/[^:]/', $this->arguments[$arg][1]);
-			if($short)
-				$short="-$short,";
-			printf("  %3s --%-{$width}s %s\n", $short, str_replace(':','',$param), $this->arguments[$arg][2]);
-		}
+		$width = max(array_map(function($a){return strlen($a->get_option_format());}, $this->arguments));
+		$wrap = Console::get_width() - $width - 8;
+		foreach($this->arguments as $arg)
+			printf("  %-{$width}s  %s\n", $arg->get_option_format(), wordwrap($arg->description, $wrap, "\n".str_pad('', $width + 4, ' ')));
 	}
-
 
 	protected function add_argument($param, $help, $type)
 	{
-		$short = $param[0].$type;
-		if(isset($this->shorts[$short[0]]))
-			$short = null;
-		else
-			$this->shorts[$short[0]] = $param;
-			
-		$this->arguments[$param] = array($param.$type, $short, $help);
+		$this->arguments[] = new ArgParseArgument($param, $type, $help, $this->shorts);
 	}
+
+}
+
+class ArgParseArgument {
+	const 
+		ORDERED = -1,
+		FLAG = 0,
+		OPTIONAL = 1, 
+		REQIRED = 2;	
+	public 
+		$name = null, 
+		$short = null,
+		$type = null,
+		$description = null;
+
+	public function __construct($name, $type, $description, & $used_shorts)
+	{
+		static $placeholders = '0123456789abcdefghijklmnopqrstuvwxyz';
+		$this->name = $name;
+		$this->type = $type;
+		$this->description = $description;
+		if($this->type == self::ORDERED)
+			return;
+		//Find the best 1 character placeholder
+		foreach(str_split($name.$placeholders) as $letter)
+		{
+			if(strpos($used_shorts, $letter) === false)
+				$this->short = $letter;
+			else if(strpos($used_shorts, strtoupper($letter)) === false)
+				$this->short = strtoupper($letter);
+			if($this->short)
+				break;
+		}
+		$used_shorts.=  $this->short;
+	}
+	function get_short()
+	{
+		if($this->type != self::ORDERED)
+			return $this->short.str_pad('', $this->type, ':');
+	}
+	function get_long()
+	{
+		if($this->type != self::ORDERED)
+			return $this->name.str_pad('', $this->type, ':');
+	}
+	function matches($arg)
+	{
+		if($arg == $this->name || $arg == $this->short)
+			return $this->name;
+	}
+
+	function get_option_format()
+	{
+		switch($this->type)
+		{
+			case ArgParseArgument::ORDERED:  
+				return sprintf('<%s>', $this->name);
+			case ArgParseArgument::FLAG:
+				return sprintf('-%s, --%s', $this->short, $this->name);
+			case ArgParseArgument::OPTIONAL:
+				return sprintf('-%s [<value>], --%s[=<value>]', $this->short, $this->name);
+			case ArgParseArgument::REQIRED:
+				return sprintf('-%s <value>, --%s=<value>', $this->short, $this->name);
+		}
+	}
+
+	function get_inline_format()
+	{
+		switch($this->type)
+		{
+			case ArgParseArgument::ORDERED:  
+				return sprintf('<%s>', $this->name);
+			case ArgParseArgument::FLAG:
+				return sprintf('[--%s]', $this->name);
+			case ArgParseArgument::OPTIONAL:
+				return sprintf('[--%s[=<value>]]', $this->name);
+			case ArgParseArgument::REQIRED:
+				return sprintf('[--%s=<value>]', $this->name);
+		}
+	}	
 }
