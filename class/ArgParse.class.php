@@ -33,6 +33,7 @@ Run as: `myApplication --help`:
 class ArgParse
 {
 	protected
+		$argv = array(),
 		$shorts = '',
 		$arguments = array(),
 		$description;
@@ -40,8 +41,14 @@ class ArgParse
 	public function __construct($description, $help = true)
 	{
 		$this->description = $description;
+		$this->set_argv($GLOBALS['argv']);
 		if($help)
 			$this->add_flag_argument('help', 'Display this help message');
+	}
+
+	public function set_argv($argv)
+	{
+		$this->argv = $argv;
 	}
 
 	public function add_flag_argument($param, $help = '')
@@ -103,10 +110,8 @@ class ArgParse
 
 	public function help()
 	{
-		global $argv;
-		print "Usage: ".basename($argv[0])." ".implode(' ', array_map(function($a){return $a->get_inline_format();}, $this->arguments));
+		print "Usage: ".basename($this->argv[0])." ".implode(' ', array_map(function($a){return $a->get_inline_format();}, $this->arguments));
 		print "\n\n$this->description\n\n";
-
 
 		$width = max(array_map(function($a){return strlen($a->get_option_format());}, $this->arguments));
 		$wrap = Console::get_width() - $width - 8;

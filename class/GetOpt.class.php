@@ -11,10 +11,9 @@ class GetOpt
 		$values = array(),
 		$unprocessed = array();
 
-	public function __construct($short_opts = '', $long_opts = array())
+	public function __construct($short_opts = '', $long_opts = array(), $argv = null)
 	{
-		global $argv;
-		$this->args = array_slice($argv, 1);
+		$this->args = array_slice($argv ?: $GLOBALS['argv'], 1);
 
 		foreach(Regex::select_all('/[a-zA-Z]:*/', $short_opts) as $opt)
 		{
