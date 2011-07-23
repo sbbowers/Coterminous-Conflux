@@ -6,6 +6,7 @@ class Recipe
 		$commands = array();
 	protected
 		$command = null, 
+		$recipe_dir = null,
 		$options = array(),
 		$files = array(),
 		$config = array();
@@ -43,7 +44,7 @@ class Recipe
 			$a->help();
 			exit;
 		}
-		if(!isset(Auto::$APATH))
+		if(!isset(Auto::$APATH) && !isset($config['options']['apath']))
 		{
 			print "Cannot locate the coterminous conflux application path\n";
 			exit;
@@ -57,27 +58,45 @@ class Recipe
 		$this->command = $command;
 		$this->config = $this->get_recipe_config($command);
 		$this->options = $this->get_options($options);
-		$this->files = Resolve::glob('*.yml', Auto::$FPATH.'/recipe/'.$command);
+		if(isset($this->options['apath']))
+			Auto::$APATH = substr($this->options['apath'], 0, 1) == '/' ? $this->options['apath'] : getcwd().'/'.$this->options['apath'];
+		$this->recipe_dir = Auto::$FPATH.'/recipe/'.$command;
+		chdir($this->recipe_dir);
+		$this->files = Resolve::glob('*', '.');
 		unset($this->files[array_search(Auto::$FPATH."/recipe/$command/$command.recipe.yml", $this->files)]);
 		$this->execute();
 	}
 
 	protected function execute()
 	{
-		foreach($this->files as $fname)
+		foreach($this->files as $oname)
 		{
-			$content = file_get_contents($fname);
-			$fname = str_replace('|', '/', basename($fname));
+			$fname = str_replace('|', '/', Auto::$APATH.'/'.$oname);
+			$fname = str_replace('/./', '/', $fname);
+			$oname = $this->recipe_dir.'/'.$oname;
+			$content = file_get_contents($oname);
 			foreach($this->options as $search => $replace)
 			{
 				$fname = str_replace("{%$search%}", $replace, $fname);
 				$content = str_replace("{%$search%}", $replace, $content);
 			}
+			$perms = fileperms($oname);
+			$hperms = substr(decoct($perms), -4);
+			if(is_dir($oname) || substr($oname, -1) == '|')
+			{
+				Console::out('[generate] ','light white');
+				Console::out("Creating directory $hperms $fname\n", 'light green');				
+				@mkdir($fname, 0777 , true);
+			}
+			else
+			{
+				Console::out('[generate] ','light white');
+				Console::out("Creating file      $hperms $fname\n", 'light green');
+				@mkdir(dirname($fname), 0777 , true);
+				file_put_contents($fname, $content);
+			}
+			chmod($fname, $perms);
 
-			Console::out('[generate] ','light white');
-			Console::out('Writing file '.$fname."\n", 'light green');
-			mkdir(dirname($fname), 0777 , true);
-			file_put_contents($fname, $content);
 		}
 	}
 
@@ -90,7 +109,6 @@ class Recipe
 
 	protected function get_options($options)
 	{
-		print_r($options);
 		foreach((array)$this->config['options'] as $name => $opt)
 		{
 			if(isset($options[$name]))
@@ -102,7 +120,6 @@ class Recipe
 		}
 		return $options;
 	}
-
 
 	protected static function help()
 	{
