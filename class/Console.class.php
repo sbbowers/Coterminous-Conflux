@@ -102,8 +102,8 @@ class Console
 		$back = in_array($back_mod, array('light', 'bright', 'very')) ? "light $back" : "dark $back";
 		$fore = isset($fore_colors[$fore]) ? $fore_colors[$fore] : '0;37';
 		$back = isset($back_colors[$back]) ? $back_colors[$back] : '0';
-		
-		return "\033[{$back};{$fore}m";
+
+		return chr(27)."[{$back};{$fore}m";
 	}
 
 	public static function get_width()
