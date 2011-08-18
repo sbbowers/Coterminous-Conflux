@@ -3,7 +3,7 @@ default:
 # requires libreadline-dev
 
 	@echo 'Building c,read'
-	g++ -o c,read c,read.cpp -lreadline
+	g++ -o readline_wrapper readline_wrapper.cpp -lreadline
 
 portable:
 # Make a portable cross-distribution binary version
@@ -11,4 +11,4 @@ portable:
 # If you're compiling on an x64, you'll be stuck with x64
 
 	@echo 'Building portable c,read'
-	g++ -o c,read c,read.cpp -static-libgcc -static-libstdc++ -lreadline -lncurses -ldl -static
+	g++ -o readline_wrapper readline_wrapper.cpp -static-libgcc -static-libstdc++ -lreadline -lncurses -ldl -static

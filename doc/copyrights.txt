@@ -27,3 +27,12 @@ Coterminous Conflux contains the Minify utility
 Url:       http://code.google.com/p/minify/
 Copyright: Ryan Grove, Steve Clay
 License:   BSD (extension/Minify/LICENSE.txt)
+
+readline_wrapper
+-------
+
+Coterminous Conflux distributes the readline_wrapper app
+
+Location:  bin/c++/readline_wrapper
+Copyright: Scott Bowers
+License:   GNU v3 (bin/c++/readline_wrapper/license.txt)
