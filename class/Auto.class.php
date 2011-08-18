@@ -14,7 +14,7 @@ class Auto
 	// Set up initial framework search paths
 	public static function __autoload()
 	{
-		self::$APATH = getenv('APATH');
+		self::$APATH = dirname(__DIR__);
 		self::$FPATH = getenv('FPATH');
 
 		// For CLI support
