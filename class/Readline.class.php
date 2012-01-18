@@ -56,7 +56,11 @@ class Readline
   public function save()
   {
     if($this->history_file)
+    {
+      if(!is_dir(dirname($this->history_file)))
+        mkdir(dirname($this->history_file), 0755,true);
       file_put_contents($this->history_file, implode("\n", array_slice($this->history, -1000)));
+    }
   }
 
   protected function read_history()
