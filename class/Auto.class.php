@@ -14,16 +14,9 @@ class Auto
 	// Set up initial framework search paths
 	public static function __autoload()
 	{
-		if(getenv('APATH'))
-			self::$APATH = getenv('APATH');
-		else
-			self::$APATH = dirname(__DIR__);
-		self::$FPATH = getenv('FPATH');
+		self::$FPATH = dirname(__DIR__);
+		self::$APATH = self::detect_project();
 
-		// For CLI support
-		if(!self::$FPATH)
-			self::$FPATH = dirname(__DIR__);
-	
 		spl_autoload_register(array(__NAMESPACE__.'\\'.__CLASS__, 'load'));
 
 		self::cache_files();
@@ -79,6 +72,22 @@ class Auto
 		// Call static autoload function if defined
 		if(is_callable($class.'::__autoload'))
 		  $class::__autoload();
+	}
+
+	protected static function detect_project()
+	{
+		$paths = array(dirname(realpath($_SERVER["SCRIPT_FILENAME"])), getcwd());
+
+		foreach($paths as $path)
+		{
+			while($path != '/')
+			{
+				if(file_exists("$path/.coterminousconflux.project"))
+					return $path;
+				else 
+					$path = dirname($path);
+			}
+		}
 	}
 }
 
