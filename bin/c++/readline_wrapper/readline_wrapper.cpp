@@ -20,6 +20,7 @@
 int sig_read = 0;
 std::string prompt;
 char * command;
+const char * history_file = "/home/sbbowers/.coterminousconflux/console_history";
 char tbuffer[8192];
 
 void load_history();
@@ -30,7 +31,7 @@ void sighandler(int sig);
 
 int main(int argc, char *argv[])
 {
-    load_history();
+    read_history(history_file);
     load_tab_completion();
     signal(SIGINT, &sighandler); // Don't die on sigint
 
@@ -55,6 +56,7 @@ int main(int argc, char *argv[])
     fclose(fd_sig);
     fclose(fd_out);
 
+    write_history(history_file);
     return 0;
 }
 
@@ -67,6 +69,8 @@ void read_command(FILE * fd_sig, FILE * fd_out)
     if(!sig_read)
     {
        fgets(tbuffer, 8192, fd_sig); // wait for signal from main process
+       tbuffer[strcspn(tbuffer, "\n")] = '\0'; // remove newline
+       prompt = tbuffer;
        sig_read = 1; 
     }
 
@@ -98,19 +102,6 @@ void read_command(FILE * fd_sig, FILE * fd_out)
     }
 }
 
-void load_history()
-{
-    FILE * fd = fdopen(3, "r");
-    if(fd)
-    {
-        while(fgets(tbuffer, 8192, fd))
-        {
-            tbuffer[strcspn(tbuffer, "\n")] = '\0'; // remove newline
-            add_history(tbuffer);
-        }
-        fclose(fd);
-    }   
-}
 void load_tab_completion()
 {
     /*

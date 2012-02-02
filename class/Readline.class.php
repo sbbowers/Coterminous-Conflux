@@ -39,9 +39,9 @@ class Readline
     pcntl_signal(SIGINT, function(){});
   }
 
-  public function read()
+  public function read($prompt)
   {
-    fprintf($this->handle[self::SIG_PIPE], "read\n");
+    fprintf($this->handle[self::SIG_PIPE], $prompt."\n");
     if(is_resource($this->process) && is_resource($this->handle[self::COM_PIPE]) && !feof($this->handle[self::COM_PIPE]))
     {
         $this->last_line = fgets($this->handle[self::COM_PIPE]);
@@ -68,7 +68,7 @@ class Readline
     if(file_exists($this->history_file))
     {
       $content = file_get_contents($this->history_file);
-      fprintf($this->handle[3], $content);
+      fprintf($this->handle[3], "%s", $content);
       $this->history = explode("\n", $content);
     }
     fclose($this->handle[3]);
