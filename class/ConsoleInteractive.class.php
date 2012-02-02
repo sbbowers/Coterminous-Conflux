@@ -16,14 +16,10 @@ class ConsoleInteractive extends Console
 			exit(111);
 		}
 
-		if(!function_exists("readline_completion_function"))
-			echo "Interactive Console requires readline\n" && exit();
-
+		stream_set_blocking(STDIN, 0);
 		error_reporting(E_ALL | E_STRICT);
 		ob_implicit_flush(true);
-		readline_completion_function("ConsoleInteractive::complete");
 		pcntl_signal(SIGINT, array($this, "handle_interupt"));
-		readline_read_history(getenv('HOME').'/.coterminousconflux/console_history');
 	}
 
 	public function start()
@@ -35,37 +31,25 @@ class ConsoleInteractive extends Console
 			if(!$this->command_ready())
 				continue;
 
+			echo Console::color('light red');
+			unset($__ret);
 			ob_start();
-			try 
+			try
 			{
 				$__ret = eval($this->command);
 			}
 			catch (Exception $e)
 			{
-				echo $e;
+				echo Console::text($e, 'dark red');
 			}
 			$__output = ob_get_contents();
 			ob_end_clean();
 
 			echo Console::color().preg_replace('/(?<=.)\n*$/', "\n", $__output);
-			echo Console::color('light green');
-			var_dump($__ret);
-			echo Console::color();
+			if(isset($__ret))
+				echo $this->var_pretty($__ret)."\n";
 			$this->command = '';
 		}
-	}
-	public function __destruct()
-	{
-		$dir = getenv('HOME').'/.coterminousconflux';
-
-		if(!file_exists($dir))
-			mkdir($dir);
-		readline_write_history($dir.'/console_history');
-
-		$f = file($dir.'/console_history');
-		$t = array_shift($f);
-		$f = implode('', array_slice($f, -1000));
-		file_put_contents($dir.'/console_history', $t.$f);
 	}
 
 	protected function current_nest()
@@ -81,23 +65,23 @@ class ConsoleInteractive extends Console
 	protected function get_command()
 	{
 		static $last_command = '';
-		$this->line = readline(Console::color('blue')."php".$this->current_nest()." ".Console::color());
-		pcntl_signal_dispatch();
 
-		if($this->line === false)
-		{
-			print "\n";
-			exit();
-		}
+		echo Console::text('php'.$this->current_nest().' ', 'light blue');
+		do {
+			pcntl_signal_dispatch();
+			$this->line = fgets(STDIN);
+			if(feof(STDIN) || ord($this->line) == 4)
+			{
+				echo "\n";
+				exit;
+			}
+		} while(!$this->line);
 
 		while(strlen($this->line))
 			$this->command.= $this->get_tokens($this->line);
 
 		if($this->command_ready() && $last_command != $this->command)
-		{
-			readline_add_history($this->command);
 			$last_command = $this->command;
-		}
 
 		$this->scrub_command();
 	}
@@ -171,6 +155,28 @@ class ConsoleInteractive extends Console
 		$this->line = '';
 		$this->command = '';
 		$this->nesting_block = '';
+		echo "\nphp".$this->current_nest().' ';
 	}
 
+	public function var_pretty($variable)
+	{
+		$fg = Console::color('light green');
+		$bg = Console::color('dark green');
+		$regex = array(
+			'/\n\s*/' => ' ',
+			'/\[("[^"]+")(:protected|:private|:public)?]/' => "[$fg\$1$bg]",
+			'/\[(\d+)\]/' => "[$fg\$1$bg]",
+			'/bool\((\w+)\)/' => "bool($fg\$1$bg)",
+			'/string\((\d+)\) ("[^"]*")/' => "string(\$1) $fg\$2$bg",
+			'/int\((\d+)\)/' => "int($fg\$1$bg)",
+			'/float\((\d+\.?\d*)\)/' => "float($fg\$1$bg)",
+			'/NULL/' => "{$fg}NULL$bg",
+			);
+
+		ob_start();
+		var_dump($variable);
+		$__output = ob_get_clean();
+
+		return $bg.preg_replace(array_keys($regex), array_values($regex), $__output).Console::color();
+	}
 }
