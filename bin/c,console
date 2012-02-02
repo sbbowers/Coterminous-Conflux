@@ -1,6 +1,0 @@
-#!/usr/bin/php
-<?php
-
-require dirname(__DIR__).'/class/Auto.class.php';
-
-Console::shell();
