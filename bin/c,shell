@@ -5,7 +5,7 @@ DIR=$(dirname $(dirname $0))
 while getopts ":r" opt; do
   case $opt in
     r)
-      php -r "require '$DIR/class/Auto.class.php'; Console::shell();"
+      php -r "require '$DIR/bootstrap.php'; Console::shell();"
       exit
       ;;
     s)
@@ -20,4 +20,4 @@ if [[ -n $(which rlwrap ) ]] ; then
 fi
 
 [[ $SILENT ]] || echo -e '\033[1;31mFor a better experience, please install the "rlwrap" package\033[0m'
-php -r "require '$DIR/class/Auto.class.php'; Console::shell();"
+php -r "require '$DIR/bootstrap.php'; Console::shell();"

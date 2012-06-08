@@ -20,6 +20,7 @@ class Auto
 		spl_autoload_register(array(__NAMESPACE__.'\\'.__CLASS__, 'load'));
 
 		self::cache_files();
+		self::import_initializers();
 	}
 
 	public static function class_name($class)
@@ -88,6 +89,14 @@ class Auto
 					$path = dirname($path);
 			}
 		}
+	}
+
+	protected static function import_initializers()
+	{
+		$dir = self::$FPATH.'/lib/initializers';
+		$files = explode("\n", trim(`find $dir -type f`));
+		foreach($files as $file)
+			require_once $file;
 	}
 }
 
