@@ -44,11 +44,6 @@ class Recipe
 			$a->help();
 			exit;
 		}
-		if(!isset(Auto::$APATH) && !isset($config['options']['apath']))
-		{
-			print "Cannot locate the coterminous conflux application path\n";
-			exit;
-		}
 
 		$s = new self($opts['recipe'], $a->parse());
 	}	
@@ -58,22 +53,35 @@ class Recipe
 		$this->command = $command;
 		$this->config = $this->get_recipe_config($command);
 		$this->options = $this->get_options($options);
-		if(isset($this->options['apath']))
-			Auto::$APATH = substr($this->options['apath'], 0, 1) == '/' ? $this->options['apath'] : getcwd().'/'.$this->options['apath'];
 		$this->recipe_dir = Auto::$FPATH.'/recipe/'.$command;
-		chdir($this->recipe_dir);
-		$this->files = Resolve::glob('*', '.');
-		unset($this->files[array_search(Auto::$FPATH."/recipe/$command/$command.recipe.yml", $this->files)]);
+
+		if(!isset(Auto::$APATH) && $this->options['recipe']=='project' && $this->options['path'])
+		{
+			if(!is_dir($this->options['path']))
+				mkdir($this->options['path'], 0755, true);
+			Auto::$APATH = realpath($this->options['path']);
+			chdir(AUTO::$APATH);
+		}
+
+		if(!isset(Auto::$APATH))
+			die("Cannot locate the coterminous conflux application path\n");
+
+		$this->files = Resolve::files($this->recipe_dir.'/files');
 		$this->execute();
 	}
 
 	protected function execute()
 	{
+		Console::out('[generate] ','light white');
+		Console::out("Processing pre-generation hooks\n", 'light green');
+		if(file_exists($this->recipe_dir.'/preprocess.php'))
+			include $this->recipe_dir.'/preprocess.php';
+
 		foreach($this->files as $oname)
 		{
 			$fname = str_replace('|', '/', Auto::$APATH.'/'.$oname);
 			$fname = str_replace('/./', '/', $fname);
-			$oname = $this->recipe_dir.'/'.$oname;
+			$oname = $this->recipe_dir.'/files/'.$oname;
 			$content = file_get_contents($oname);
 			foreach($this->options as $search => $replace)
 			{
@@ -96,15 +104,19 @@ class Recipe
 				file_put_contents($fname, $content);
 			}
 			chmod($fname, $perms);
-
 		}
+
+		Console::out('[generate] ','light white');
+		Console::out("Processing post-generation hooks\n", 'light green');
+		if(file_exists($this->recipe_dir.'/postprocess.php'))
+			include $this->recipe_dir.'/postprocess.php';
 	}
 
 
 	protected static function get_recipe_config($command = null)
 	{
 		if($command)
-			return Config::load(Auto::$FPATH."/recipe/$command/$command.recipe.yml");
+			return Config::load(Auto::$FPATH."/recipe/$command/recipe.yml");
 	}
 
 	protected function get_options($options)

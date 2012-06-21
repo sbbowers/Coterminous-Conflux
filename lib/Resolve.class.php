@@ -32,17 +32,13 @@ class Resolve
 	}
 
 	// Search for files that match pattern and return all files recursively
-	public static function glob($pattern, $dir = '.', $flags = null)
+	public function files($dir = '.', $pattern = '.* *', $recursive = true)
 	{
-		$dir = escapeshellcmd($dir);
-		$files = glob("$dir/$pattern", $flags);
-
-		foreach (glob("$dir/*", GLOB_ONLYDIR) as $subdir)
-		{
-			//$subfiles = ;
-			$files = array_merge($files, Resolve::glob($pattern, $subdir, $flags));
-		}
-
+		$recursive = $recursive ? '' : '-maxdepth 1';
+		$orig_dir = getcwd();
+		chdir($dir);
+		$files = explode("\n", trim(`find $patern $recursive -not -path '..*' -not -path . -not -path './*'`));
+		chdir($orig_dir);
 		return $files;
 	}
 
