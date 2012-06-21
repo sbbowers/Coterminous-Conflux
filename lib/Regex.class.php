@@ -3,9 +3,13 @@
 class Regex
 {
 	// Wrapper for preg_match
-	public static function match($regex, $subject = null)
+	public static function match($regex, $subject = null, $pad = null)
 	{
 		preg_match($regex, $subject, $matches);
+
+		if($pad !== null)
+			return array_pad($matches, $pad, null);
+
 		return $matches;
 	}
 
