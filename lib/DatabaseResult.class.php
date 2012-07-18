@@ -1,78 +1,58 @@
 <?php
 
-define('DB_ASSOC', 0);
-define('DB_INDEX', 1);
-define('DB_BOTH', 2);
-
-class DatabaseResult extends Db implements Countable, Iterator
+class DatabaseResult extends Db implements Countable, Iterator, Arrayaccess
 {
+
+  const RESULT_ASSOC = 0;
+  const RESULT_INDEX = 1;
+  const RESULT_BOTH  = 2;
+  const RESULT_MODEL = 3;
+
 	protected 
-		$result = null,
+		$database = null,
+		$resource = null, 
 		$count = null,
 		$sql = null,
 		$ptr = 0,
-		$database = null,
-		$resource_id = null;
+		$result_mode = self::RESULT_ASSOC;
 
 	// Constructor must be passed a result
 	// $sql is for debuging purposes
-	protected function __construct($resource_id, $sql, $database)
+	public function __construct($database, $resource, $sql)
 	{
-		$this->resource_id = $resource_id;
+		$this->resource = $resource;
 		$this->sql = $sql;
 		$this->database = $database;
+
+		$this->database->set_context($resource);
+		$this->count = $this->database->num_rows();
 	}
 
-	private function wait()
-	{
-		if(!isset($this->result))
-		{
-			$res = parent::fetch_result($this->resource_id, $this->database);
-			$this->result = $res['res'];
-			$this->count = $res['count'];
-		}
-	}
-	
+  public function set_result($mode = Database::RESULT_ASSOC)
+  {
+    $this->result_mode = $mode;
+    return $this;
+  }
+
 	// Returns the contents of the current row and increments the row pointers
 	// Allows you to do `while($row = $result->fetch())`
-	// Also, you can do `while(list($field1, $field2) = $result->fetch(DB_INDEX))`
-	public function fetch($format = DB_ASSOC, $index = null)
+	// Also, you can do `while(list($field1, $field2) = $result->set_result(DatabaseResult::RESULT_INDEX)->fetch(DB_INDEX))`
+	public function fetch()
 	{
-		self::wait();
-		switch($format)
+		switch($this->result_mode)
 		{
 			default:
-			case DB_BOTH:  return pg_fetch_array($this->result, $index);
-			case DB_ASSOC: return pg_fetch_assoc($this->result, $index);
-			case DB_INDEX: return pg_fetch_row($this->result, $index);
+			case self::RESULT_INDEX: return $this->database()->fetch_index();
+			case self::RESULT_ASSOC: return $this->database()->fetch_assoc();
+			case self::RESULT_BOTH : return $this->database()->fetch_both();
+			case self::RESULT_MODEL: throw new exception('models not implemented yet');
 		}
 	}
-
-	// Returns the contents of an entire column
-	// Column name is specefied as associative name of the column
-	public function fetch_column($column_name)
-	{
-		self::wait();
-		return pg_fetch_all_columns($this->result, pg_field_num($this->result, $column_name));
-	}
-
-  public function fetch_all()
-  {
-    self::wait();
-    return pg_fetch_all($this->result);
-  }
 
 	// Return an array of the column names
 	public function columns()
 	{
-		self::wait();
-		$num = pg_num_fields($this->result);
-		$ret = array();
-		
-		for($i = 0; $i < $num; $i++)
-			$ret[] = pg_field_name($this->result, $i);
-			
-		return $ret;
+		return $this->database()->columns();
 	}
 
 	public function export()
@@ -83,22 +63,37 @@ class DatabaseResult extends Db implements Countable, Iterator
 		return $ret;
 	}
 
-	public function debug()
-	{
-		var_dump($this->export());	
-	}
-
 	// Implements Countable interface
 	// Returns the number of rows in the result
 	// Allows you to do `for($i = 0; $i < count($result); $i++)`
-	public function count() { self::wait(); return $this->count; }
+	public function count() { return $this->count; }
 
 	// Implements Iterator interface
 	// Allows you to do `foreach($result as $row)`
-	public function current() { self::wait(); return $this->fetch(DB_ASSOC, $this->ptr); }
-	public function key()     { self::wait(); return $this->ptr; }
-	public function next()    { self::wait(); $this->ptr++; }
-	public function rewind()  { self::wait(); $this->ptr = 0; pg_result_seek($this->result, 0); }
-	public function valid()   { self::wait(); return $this->ptr >= 0 && $this->ptr < $this->count; }
+	public function current() { return $this[$this->ptr]; }
+	public function key()     { return $this->ptr; }
+	public function next()    { $this->ptr++; }
+	public function rewind()  { $this->ptr = 0; }
+	public function valid()   { return isset($this[$this->ptr]); }
+
+	// Implements Arrayaccess Interface
+	public function offsetSet($offset, $value) { throw new Exception("Can't set data from a DatabaseResult"); }
+	public function offsetUnset($offset) { throw new Exception("Can't unset data from a DatabaseResult"); }
+	public function offsetExists($offset) 
+	{
+		return is_integer($offset) && $offset >= 0 && $offset < $this->count; 
+	}
+	public function offsetGet($offset) 
+	{
+		$this->database()->seek($offset); 
+		return $this->fetch();
+	}
+
+	// Set the context on the database connection and returns the connection
+	protected function database()
+	{
+		$this->database->set_context($this->resource);
+		return $this->database;
+	}
 
 }
