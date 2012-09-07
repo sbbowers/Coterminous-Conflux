@@ -26,5 +26,9 @@ class SqlCriteria
     return $ret;
   }
 
+  public function is_empty()
+  {
+    return !$this->criteria;
+  }
 
 }

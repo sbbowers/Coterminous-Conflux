@@ -126,7 +126,7 @@ class Sql implements ArrayAccess
     $commands = array(),
     $context = null;
 
-  public function __construct()
+  public function __construct($schema = 'Default')
   {
     $this->context = new SqlContext();
   }

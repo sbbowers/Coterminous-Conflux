@@ -65,7 +65,7 @@ class SqlBuilder {
     if($this->joins)
     {
       $joins = array();
-      foreach($this->joins as $join => $criteria)
+      foreach(array_reverse($this->joins) as $join => $criteria)
       {
         $table = $this->context->get_table($join);
         $criteria = $criteria->build($this->context);
@@ -79,7 +79,7 @@ class SqlBuilder {
       $ret.= ' FROM '.implode(' JOIN ', $joins);
     }
 
-    if($this->criteria)
+    if(!$this->criteria->is_empty())
       $ret.= ' WHERE '.$this->criteria->build($this->context);
 
 
