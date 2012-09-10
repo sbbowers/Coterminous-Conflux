@@ -130,6 +130,7 @@ class Recipe
 			$desc = isset($opt['description']) ? ', '.$opt['description'] : '';
 			$options[$name] = Console::prompt("Value for <$name>$desc$values :", $default);
 		}
+		$options['fpath'] = Auto::$FPATH;
 		return $options;
 	}
 
