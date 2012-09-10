@@ -32,12 +32,12 @@ class Resolve
 	}
 
 	// Search for files that match pattern and return all files recursively
-	public function files($dir = '.', $pattern = '.* *', $recursive = true)
+	public static function files($dir = '.', $pattern = '.* *', $recursive = true)
 	{
 		$recursive = $recursive ? '' : '-maxdepth 1';
 		$orig_dir = getcwd();
 		chdir($dir);
-		$files = explode("\n", trim(`find $patern $recursive -not -path '..*' -not -path . -not -path './*'`));
+		$files = explode("\n", trim(`find $pattern $recursive -not -path '..*' -not -path . -not -path './*'`));
 		chdir($orig_dir);
 		return $files;
 	}
