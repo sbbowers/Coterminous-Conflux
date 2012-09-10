@@ -122,12 +122,15 @@ class SqlException extends Exception {}
 
 class Sql implements ArrayAccess
 {
+  protected
+    $schema = null;
   public
     $commands = array(),
     $context = null;
 
-  public function __construct($schema = 'Default')
+  public function __construct($schema = null)
   {
+    $this->schema = new Schema($schema);
     $this->context = new SqlContext();
   }
 
