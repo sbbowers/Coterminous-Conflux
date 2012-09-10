@@ -33,7 +33,8 @@ class Model extends Hash
 		if(!$this->table_name)
 			throw new Exception('Cannot create model object; no table definition provided');
 
-		$this->database = $database;
+		$r = new ReflectionClass($this);
+		$this->database = $r->getNamespaceName() ?: $database;
 
 		if($dataset)
 			$this->load($dataset);
