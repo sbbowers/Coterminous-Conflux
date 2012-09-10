@@ -102,7 +102,7 @@ class DatabaseMysql extends Database
   public function pkey_sql()
   {
     return "
-      SELECT table_schema, table_name, column_name
+      SELECT table_schema as \"schema\", table_name as \"table\", column_name as \"column\"
       FROM information_schema.columns
       WHERE table_schema = database() AND (column_key = 'PRI');";
   }
