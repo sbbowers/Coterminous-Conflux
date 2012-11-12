@@ -19,7 +19,10 @@ class Controller extends Render
 		if(!$action)
 			$action = $this->default_action;
 
+		$type_specific_action = strtolower($_SERVER['REQUEST_METHOD']).'_'.$action;
 		$action = 'exec_'.$action;
+		if(method_exists($this, $type_specific_action))
+			$action = $type_specific_action;
 
 		$this->expose('content', $this);
 		
