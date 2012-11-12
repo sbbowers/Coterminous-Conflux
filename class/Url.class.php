@@ -30,10 +30,10 @@ class Url
 
 	public static function renderable_exists($relative_path)
 	{
-		if(is_file(Resolve::$APATH.'/render/'.$relative_path))
-			return Resolve::$APATH.'/render/'.$relative_path;
-		if(is_file(Resolve::$FPATH.'/render/'.$relative_path))
-			return Resolve::$FPATH.'/render/'.$relative_path;
+		if(is_file(Auto::$APATH.'/render/'.$relative_path))
+			return Auto::$APATH.'/render/'.$relative_path;
+		if(is_file(Auto::$FPATH.'/render/'.$relative_path))
+			return Auto::$FPATH.'/render/'.$relative_path;
 		return null;
 	}
 
@@ -59,6 +59,8 @@ class Url
 	{
 		if(isset($url_parts['query']))
 			$url_parts['query'].= '&';
+		else
+			$url_parts['query'] = '';
 		$url_parts['query'].= urlencode($name).'='.urlencode($value);
 		return $url_parts;
 	}
