@@ -14,6 +14,23 @@ class Resolve
 		return file_exists($file);
 	}
 
+	public static function first_cglob($pattern, $base_dir = '.', $flags = null)
+	{
+		$files = self::cglob($pattern, $base_dir = '.', $flags = null);
+		return array_shift($files);
+	}
+
+	public static function cglob($pattern, $base_dir = '.', $flags = null)
+	{
+		$dirs = Array(Auto::$APATH, Auto::$FPATH);
+		$files = Array();
+		foreach($dirs as $dir)
+		{
+			$files = array_merge($files, self::glob($pattern, "$dir/$base_dir", $flags));
+		}
+		return $files;
+	}
+
 	// Search for files that match pattern and return all files recursively
 	public static function glob($pattern, $dir = '.', $flags = null)
 	{

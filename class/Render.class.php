@@ -16,13 +16,13 @@ class Render implements ArrayAccess, Iterator
 	public function set_template($template)
 	{
 	  $class = get_class($this);
-	  do 
+		while($class && !is_file($template))
 	  {
-		  if(!is_file($template))
-			  $template = Resolve::resolve_dir(get_class($this)).'/'.$template.'.php';
+			$files = Resolve::cglob($class.'/'.$template.'.php', 'render');
+			if(count($files))
+				$template = array_shift($files);
       $class = get_parent_class($class);
     } 
-    while($class && !is_file($template));
     
 		if(!is_file($template))
 			throw new Exception(get_class($this).' set template to non-existant	'.$template);
@@ -33,7 +33,7 @@ class Render implements ArrayAccess, Iterator
 	public function add_css($file, $media = 'all')
 	{
 		$class_name = get_class($this);
-		if(!is_file(Resolve::resolve_dir($class_name).'/'.$file))
+		if(!is_file(Resolve::first_cglob($class_name.'/'.$file, 'render')))
 			throw new Exception($class_name.' does not have a '.$file);
 			
 		$file = $class_name.'/'.$file;
@@ -44,7 +44,7 @@ class Render implements ArrayAccess, Iterator
 	public function add_js($file)
 	{
 		$class_name = get_class($this);
-		if(!is_file(Resolve::resolve_dir($class_name).'/'.$file))
+		if(!is_file(Resolve::first_cglob($class_name.'/'.$file, 'render')))
 			throw new Exception($class_name. ' does not have a '.$file);
 
 		$file = $class_name.'/'.$file;
