@@ -51,7 +51,7 @@ class StaticContent
 				{
 					$dir_made = mkdir($cache_info['dirname'], 0777, true);
 					if(!$dir_made)
-						throw new Exception('Could Not Make Cache Dir');
+						throw new Exception('Could Not Make Cache Dir: '.$cache_info['dirname']);
 				}
 				$cache_tmp_path = $cache_path.'.'.getmypid();
 				if(is_null($content))
