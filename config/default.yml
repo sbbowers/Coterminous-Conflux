@@ -1,15 +1,16 @@
 
 # vim: sts=2 ts=10 expandtab
 connection:
-  mealresource: # mealresource connection should probably be in application code, not in the framework
-    db_vendor: DatabasePostgres
-    max_cons: 1
-    host: localhost
-    dbname: mealresource
-    user: mealresource
-    password: tasty
-    port: 5432
-  easy_connection: mealresource
+  available:
+#   ExampleSchemaName: # This corresponds to the php namespace you want to put the connection in
+#     vendor: Postgres # or Mysql; loads DatabasePostgres or DatabaseMysql class
+#     host: localhost
+#     dbname: 
+#     user: 
+#     password: 
+#     port: 5432
+#  enabled: [ ExampleSchemaName ] # list your Schema key from above
+#  default: ExampleSchemaName
   
 static_content:
   exclude_ext:
