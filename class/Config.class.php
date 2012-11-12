@@ -36,7 +36,7 @@ class Config
 
   // Sets a value into the config['registry']; uses set_helper with pass-by-reference
   // the registry branch is the only place to programatically include values
-  public function register(/* $index1 [, $index2 ...], $value */)
+  public static function register(/* $index1 [, $index2 ...], $value */)
   {
     $args = func_get_args();
     $value = array_pop($args);
