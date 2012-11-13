@@ -13,24 +13,12 @@ class Error404 extends Controller
 	{
 		$ret = array_pad(explode('/', $_GET['__route'], 3),3, null);
 		$controller = $ret[0];
-		$search = array();
-		$search[] = Auto::$APATH.'/render/';
-		$search[] = Auto::$FPATH.'/render/';
-		foreach($search as $path)
+		$new_controller = Auto::search_class_name($controller);
+		if($new_controller)
 		{
-			$found = $this->isearch_dir($path, $controller);
-			if($found)
-			{
-				$file_found = $this->isearch_dir($path.$found, $ret[1].'.php');
-				if($file_found)
-				{
-					$file_found = substr($file_found, 0, -4);
-					$new_uri = $_SERVER['REDIRECT_URI_PREFIX'].'/'.$found.'/'.$file_found;
-					header( "HTTP/1.1 301 Moved Permanently" );
-					header( "Location: /$new_uri" ); 
-					break;
-				}
-			}
+			$new_uri = $_SERVER['REDIRECT_URI_PREFIX'].'/'.$new_controller.'/'.$ret[1];
+			header( "HTTP/1.1 302 Moved Permanently" );
+      header( "Location: /$new_uri" );
 		}
 	}
 
