@@ -78,6 +78,8 @@ class Auto
 	protected static function detect_project()
 	{
 		$paths = array(dirname(realpath($_SERVER["SCRIPT_FILENAME"])), getcwd());
+		$tmp_path = explode('/', dirname(realpath($_SERVER["SCRIPT_FILENAME"])));
+		$paths[] = implode('/', $tmp_path);
 
 		foreach($paths as $path)
 		{
