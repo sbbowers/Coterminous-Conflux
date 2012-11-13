@@ -1,0 +1,30 @@
+#!/usr/bin/php
+<?php
+require dirname(__DIR__).'/bootstrap.php';
+
+if(!isset($argv[1]))
+	die("Connection Name Required\n");
+
+$connection = $argv[1];
+
+$conn_data = Config::get('connection', 'available', $connection);
+if($conn_data['vendor'] == 'Postgres')
+{
+	$command = "/usr/bin/psql";
+	$args = array();
+	$args[] = "-h{$conn_data['host']}";
+	$args[] = "-d{$conn_data['dbname']}";
+	$args[] = "-p{$conn_data['port']}";
+	$args[] = $conn_data['user'];
+	$pass_line = "{$conn_data['host']}:{$conn_data['port']}:{$conn_data['dbname']}:{$conn_data['user']}:{$conn_data['password']}";
+
+
+	$pgpass = fopen(getenv('HOME').'/.pgpass', 'w');
+	chmod(getenv('HOME').'/.pgpass', 0600);
+	fwrite($pgpass, $pass_line);
+	fclose($pgpass);
+
+	pcntl_exec($command, $args);
+}
+
+die("Unkown Vendor Type: {$conn_data['vendor']}\n");

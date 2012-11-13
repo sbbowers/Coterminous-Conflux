@@ -29,6 +29,17 @@ class Auto
 			return self::$classes[$class];
 	}
 
+	public static function search_class_name($class)
+	{
+		$class = strtolower($class);
+		foreach(self::$classes as $class_name => $file_path)
+		{
+			if(strtolower($class_name) == $class)
+				return $class_name;
+		}
+		return false;
+	}
+
 	private static function cache_files()
 	{
 		$ns = $ns_file = null;
@@ -77,10 +88,8 @@ class Auto
 
 	protected static function detect_project()
 	{
-		$paths = array(dirname(realpath($_SERVER["SCRIPT_FILENAME"])), getcwd());
-		$tmp_path = explode('/', dirname(realpath($_SERVER["SCRIPT_FILENAME"])));
-		$paths[] = implode('/', $tmp_path);
-
+		$paths = array(dirname(dirname(realpath($_SERVER["SCRIPT_FILENAME"]))), getcwd());
+		
 		foreach($paths as $path)
 		{
 			while($path != '/')
@@ -91,6 +100,10 @@ class Auto
 					$path = dirname($path);
 			}
 		}
+
+		// Needed to built in framework apps can access the application
+		if(file_exists(getenv('APATH')))
+			return getenv('APATH');
 	}
 
 	protected static function import_initializers()
