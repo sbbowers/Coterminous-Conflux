@@ -16,6 +16,11 @@ class Route
 		self::$error = $route;
 	}
 
+	public static function get_error()
+	{
+		return self::$error;
+	}
+
 	public static function get()
 	{
 		if(!$_REQUEST['__route'])
@@ -26,7 +31,7 @@ class Route
 		if(class_exists($ret[0]) && in_array('Controller', class_parents($ret[0])))
 			return $ret;
 
-		return array(self::$error, null, null);	
+		throw new RouteException("Unknown Controller", 404);
 	}
 
 }

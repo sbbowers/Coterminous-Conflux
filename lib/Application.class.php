@@ -10,11 +10,18 @@ class Application
 		Route::set_default(Config::get('route', 'default'));
 		Route::set_error(Config::get('route', 'error'));
 		
-		list($controller, $action, $extra) = Route::get();
-		
-		$controller = new $controller();
-		
-		$controller->exec($action);
+		try
+		{
+			list($controller, $action, $extra) = Route::get();
+			
+			$controller = new $controller();
+			
+			$controller->exec($action, $extra);
+		}
+		catch(RouteException $e)
+		{
+			$controller = $e->get_controller();
+		}
 		
 		$layout = $controller->get_layout();
 		$layout = new $layout();
