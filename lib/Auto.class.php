@@ -80,6 +80,18 @@ class Auto
 	{
 		if(isset(self::$classes[$class]))
 			require_once self::$classes[$class];
+		else
+		{
+			$callbacks = Config::find('autoload', 'callbacks');
+			foreach($callbacks as $method)
+			{
+				$valid = false;
+				if(is_callable($method))
+					$valid = call_user_func($method, $class);
+				if($valid)
+					break;
+			}
+		}
 		
 		// Call static autoload function if defined
 		if(is_callable($class.'::__autoload'))

@@ -24,8 +24,8 @@ class Model extends Hash
 	public function __construct($table_name = null, $dataset = null,  $database = null)
 	{
 		// extended models will define $table_name in the class, so shift the parameters 
-		if($this->table_name)
-			return $this->__construct(null, $table_name, $dataset);
+//		if($this->table_name)
+//			return $this->__construct(null, $table_name, $dataset);
 
 		if($table_name)
 			$this->table_name = $table_name;
@@ -221,5 +221,95 @@ class Model extends Hash
     
     
   }
+
+	public static function GenerateSubClass($class)
+	{
+		// Flag if full schema was included in class name
+		$full_schema = false;
+
+		// Extracting the namespace from class
+		$class_parts = explode('\\', $class);
+
+		// Models should ONLY have one namespace on them
+		if(count($class_parts) != 2)
+			return false;
+
+		// Seperating class name into database alias and table name
+		list($database, $table) = $class_parts;
+
+		// Checking for explicitly defined schema
+		$table_schema = explode('__', $table);
+		if(count($table_schema) == 2)
+		{
+			list($schema, $table) = $table_schema;
+			$full_schema = true;
+		}
+		elseif(count($table_schema) == 1)
+			list($table) = $table_schema;
+		else
+			return false;
+
+		// Connecting to database alias to ensure it exists, and pull table information
+		try
+		{
+			$db = Database::connect($database);
+		}
+		catch(Exception $e)
+		{
+			return false;
+		}
+
+		// Pulling schema information. 
+		// This needs two updates, First it should ONLY be pulling schema and table
+		// Second, we need to make this utalize caching if avalible
+		$schema_data = $db->exec($db->schema_sql());
+
+		// Searching the column data for table's existance
+		// Double checking that there are not two identially named tables in two schemas
+		$valid = false;
+		foreach($schema_data as $row)
+		{
+			if($schema === null || $row['schema'] == $schema)
+			{
+				if($row['table'] == $table)
+				{
+					if($valid && $row['schema'] != $schema)
+					{
+						// Should this throw an exception?
+						return false; //Do Not create dynamic sub class if there are duplicate table names
+					}
+					$schema = $row['schema'];
+					$valid = true;
+				}
+			}
+		}
+
+		// If no matching table return false
+		if(!$valid)
+			return false;
+
+		// Generating the dynamic class. This is going to do an EVAL (I know, I know)
+		// So we have to be sure we have scrubed the input!
+		// This code will also generate only the sub-class required, and if we generate
+		// only the short class (IE does not include schema name) we will follow this up by generating
+		// the full schema class.
+		if($full_schema)
+		{
+			$dynamic_class = new DynamicClassMaker('sub_model_full');
+			$dynamic_class->add_values(array('SCHEMA_NAME' => preg_replace('/[^a-z0-9]/i', '', $schema)));
+			$dynamic_class->add_values(array('TABLE_NAME' => preg_replace('/[^a-z0-9]/i', '', $table)));
+			$dynamic_class->add_values(array('DATABASE_NAME' => preg_replace('/[^a-z0-9]/i', '', $database)));
+			$dynamic_class->make_class();
+		}
+		else
+		{
+			$dynamic_class = new DynamicClassMaker('sub_model_short');
+			$dynamic_class->add_values(array('SCHEMA_NAME' => preg_replace('/[^a-z0-9]/i', '', $schema)));
+			$dynamic_class->add_values(array('TABLE_NAME' => preg_replace('/[^a-z0-9]/i', '', $table)));
+			$dynamic_class->add_values(array('DATABASE_NAME' => preg_replace('/[^a-z0-9]/i', '', $database)));
+			$dynamic_class->make_class();
+		}
+		return true;
+	}
 
 }
