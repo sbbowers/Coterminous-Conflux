@@ -20,9 +20,9 @@ class DatabasePostgres extends Database
 		
 	}
 
-	protected function new_connection()
+	public function new_connection()
 	{
-echo "New Connection\n";
+
 		$connection_string = $this->get_connection_string();
 		$connection = pg_connect($connection_string, PGSQL_CONNECT_FORCE_NEW);
 

@@ -10,7 +10,7 @@ class DatabaseMysql extends Database
       return;
   }
 
-	protected function new_connection()
+	public function new_connection()
 	{
 		$connection = new mysqli($this->config['host'], $this->config['user'], $this->config['password'], $this->config['database']);
 

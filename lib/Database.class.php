@@ -43,11 +43,7 @@ abstract class Database {
 
   private final static function init_pool($config_name)
   {
-    if(!array_key_exists($config_name, self::$pool))
-    {
-      self::$pool[$config_name]['private'] = array();
-      self::$pool[$config_name]['shared'] = array();
-    }
+		self::$pool[$config_name] = new DatabasePool();
   }
 
   private function set_object_sequence()
@@ -72,33 +68,29 @@ abstract class Database {
     $this->context = $context;
   }
 
+	public final function id()
+	{
+		return $this->id;
+	}
+
   public final function start_private()
   {
-    if(count(self::$pool[$this->config_name]['shared']) == 0)
-      self::$pool[$this->config_name]['shared'][] = $this->new_connection();
-    $connection = array_pop(self::$pool[$this->config_name]['shared']);
-    self::$pool[$this->config_name]['private'][$this->id] = $connection;
+		self::$pool[$this->config_name]->start_private($this);
   }
 
   public final function stop_private()
   {
-    self::$pool[$this->config_name]['shared'][] = self::$pool[$this->config_name]['private'][$this->id];
-    unset(self::$pool[$this->config_name]['private'][$this->id]);
+		self::$pool[$this->config_name]->stop_private($this);
   }
 
   protected final function get_connection()
   {
-    $config_name = $this->config_name;
-    if(array_key_exists($this->id, self::$pool[$config_name]['private']))
-      return self::$pool[$config_name]['private'][$this->id];
-    if(count(self::$pool[$config_name]['shared']) == 0)
-      self::$pool[$config_name]['shared'][] = $this->new_connection();
-    return current(self::$pool[$config_name]['shared']);
+		return self::$pool[$this->config_name]->get_connection($this);
   }
 
   // Use the Database::connect() factory method to construct an instance
   protected abstract function __construct($config_array); 
-  protected function new_connection();
+  public abstract function new_connection();
 
   // Execute some SQL and return a DatabaseResult
   public abstract function exec($sql); // return DatabaseResult
