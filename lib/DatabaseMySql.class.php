@@ -2,19 +2,23 @@
 class DatabaseMysql extends Database
 {
   protected 
-    $context = null,
-    $connection = null;
+    $context = null;
 
   public function __construct($config = null)
   {
     if($config === null)
       return;
-
-    $this->connection = new mysqli($config['host'], $config['user'], $config['password'], $config['database']);
-
-    if($this->connection->connect_error)
-      throw new Exception('DB Connection Error: '.$this->connection->connect_errno.' '.$this->connection->connect_error);
   }
+
+	public function new_connection()
+	{
+		$connection = new mysqli($this->config['host'], $this->config['user'], $this->config['password'], $this->config['database']);
+
+    if($connection->connect_error)
+      throw new Exception('DB Connection Error: '.$this->connection->connect_errno.' '.$this->connection->connect_error);
+
+		return $connection;
+	}
 
   public function exec($sql)
   {
@@ -27,8 +31,34 @@ class DatabaseMysql extends Database
 
   public function affected_rows()
   {
-    return $this->connection->affected_rows;
+    return $this->get_connection()->affected_rows;
   }
+
+
+	public function begin()
+	{
+		$this->start_private();
+		$this->get_connection()->autocommit(false);
+	}
+
+  public function commit()
+	{
+		$this->get_connection()->commit();
+		$this->get_connection()->autocommit(true);
+		$this->stop_private();
+	}
+
+  public function rollback()
+	{
+		$this->get_connection()->rollback();
+		$this->get_connection()->autocommit(true);
+		$this->stop_private();
+	}
+
+	public function free_result()
+	{
+		$this->context->close();
+	}
 
   public function num_rows()
   {
@@ -73,7 +103,7 @@ class DatabaseMysql extends Database
       case 'varchar':
       case 'longvarchar':
       case 'character varying':
-        return "'".$this->connection->real_escape_string($value)."'";
+        return "'".$this->get_connection()->real_escape_string($value)."'";
 
       case 'integer':
       case 'smallint':

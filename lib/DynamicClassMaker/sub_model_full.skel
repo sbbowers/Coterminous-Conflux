@@ -1,0 +1,14 @@
+namespace %%DATABASE_NAME%%;
+
+
+%%CLASS_KEY_WORD%% %%SCHEMA_NAME%%__%%TABLE_NAME%% extends \Model
+{
+	protected
+		$table_name = '%%TABLE_NAME%%',
+		$schema_name = '%%SCHEMA_NAME%%';
+
+	public function __construct($row = array())
+	{
+		parent::__construct($this->table_name, array(), '%%DATABASE_NAME%%');
+	}
+}

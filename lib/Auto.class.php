@@ -29,6 +29,17 @@ class Auto
 			return self::$classes[$class];
 	}
 
+	public static function search_class_name($class)
+	{
+		$class = strtolower($class);
+		foreach(self::$classes as $class_name => $file_path)
+		{
+			if(strtolower($class_name) == $class)
+				return $class_name;
+		}
+		return false;
+	}
+
 	private static function cache_files()
 	{
 		$ns = $ns_file = null;
@@ -69,6 +80,18 @@ class Auto
 	{
 		if(isset(self::$classes[$class]))
 			require_once self::$classes[$class];
+		else
+		{
+			$callbacks = Config::find('autoload', 'callbacks');
+			foreach($callbacks as $method)
+			{
+				$valid = false;
+				if(is_callable($method))
+					$valid = call_user_func($method, $class);
+				if($valid)
+					break;
+			}
+		}
 		
 		// Call static autoload function if defined
 		if(is_callable($class.'::__autoload'))
@@ -77,8 +100,8 @@ class Auto
 
 	protected static function detect_project()
 	{
-		$paths = array(dirname(realpath($_SERVER["SCRIPT_FILENAME"])), getcwd());
-
+		$paths = array(dirname(dirname(realpath($_SERVER["SCRIPT_FILENAME"]))), getcwd());
+		
 		foreach($paths as $path)
 		{
 			while($path != '/')
@@ -89,6 +112,10 @@ class Auto
 					$path = dirname($path);
 			}
 		}
+
+		// Needed to built in framework apps can access the application
+		if(file_exists(getenv('APATH')))
+			return getenv('APATH');
 	}
 
 	protected static function import_initializers()
