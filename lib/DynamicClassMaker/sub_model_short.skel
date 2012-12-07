@@ -1,0 +1,5 @@
+namespace %%DATABASE_NAME%%;
+
+%%CLASS_KEY_WORD%% %%TABLE_NAME%% extends \%%DATABASE_NAME%%\%%SCHEMA_NAME%%__%%TABLE_NAME%%
+{
+}

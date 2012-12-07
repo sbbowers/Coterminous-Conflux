@@ -1,35 +1,159 @@
 <?php
-class DatabasePostgres extends DatabaseVendor
+class DatabasePostgres extends Database
 {
-	protected 
-		$database = null,
+	protected
 		$config = null,
-		$con = null;
+		$connection_method = null,
+		$context = null,
+		$last_context = null;
 
-	public function __construct($db_config = null)
+	public function __construct($config = null)
 	{
-		if($db_config === null)
+		if($config === null)
 			return;
 
-		$this->config = $db_config;
-		$con_string = $this->get_connection_string();
-		$this->con = pg_connect($con_string, PGSQL_CONNECT_FORCE_NEW);
-		if(!$this->con)
-		{
-			throw new Exception('DB Connection Error: '.pg_last_error($this->con));
-		}
+		$this->config = $config;
+
+		$this->connection_method = 'sync';
+		if(array_key_exists('query_mode', $this->config))
+			$this->connection_method = $this->config['query_mode'];
+		
 	}
 
-	public function exec_async($sql)
+	public function new_connection()
 	{
-		if(pg_connection_busy($this->con))
-			throw new Exception('Attempting To Query On Busy Connection');
-		$res = pg_send_query($this->con, $sql);
-		if(!$res)
-			throw new Exception('Error Sending Query: '.pg_last_error($this->con));
+
+		$connection_string = $this->get_connection_string();
+		$connection = pg_connect($connection_string, PGSQL_CONNECT_FORCE_NEW);
+
+		if($connection === false)
+		{
+			throw new Exception('Postgres Connection Failed');
+		}
+		return $connection;
 	}
 
-	public function format($value, $type)
+	private function get_connection_string()
+	{
+		$valid_options = array();
+		$valid_options['host'] = true;
+		$valid_options['hostaddr'] = true;
+		$valid_options['port'] = true;
+		$valid_options['dbname'] = true;
+		$valid_options['user'] = true;
+		$valid_options['password'] = true;
+		$valid_options['connect_timeout'] = true;
+		$valid_options['options'] = true;
+		$valid_options['sslmode'] = true;
+		$valid_options['service'] = true;
+
+		$connection_string = '';
+		foreach($this->config as $key => $value)
+		{
+			if(array_key_exists($key, $valid_options))
+			{
+				$value = addslashes($value);
+				$connection_string.= "$key='$value' ";
+			}
+		}
+		return $connection_string;
+	}
+
+	public function exec($sql)
+	{
+		if($this->connection_method == 'sync')
+			$result = $this->exec_sync($sql);
+		elseif($this->connection_method == 'async')
+			$result = $this->exec_async($sql);
+		else
+			throw new Exception('Unknown Postgres Query Method: '.$this->connection_method);
+		$this->last_context = new DatabasePostgresContext($result, $this->get_connection());
+		return new DatabaseResult($this, $this->last_context, $sql);
+	}
+
+	public function begin()
+	{
+		$this->start_private();
+		$this->exec_sync('BEGIN');
+	}
+
+	public function commit()
+	{
+		$this->exec_sync('COMMIT');
+		$this->stop_private();
+	}
+
+	public function rollback()
+	{
+		$this->exec_sync('ROLLBACK');
+		$this->stop_private();
+	}
+
+	private function exec_sync($sql)
+	{
+		$res = pg_query($this->get_connection(), $sql);
+		if($res === false)
+			throw new Exception('Error TODO: Update This!');
+		return $res;
+	}
+
+	private function exec_async($sql)
+	{
+		if(!is_null($this->last_context))
+			$this->last_context->result();
+		$res = pg_send_query($this->get_connection(), $sql);
+		if($res === false)
+			throw new Exception('Error TODO: Update This!');
+		return $res;
+	}
+
+	public function free_result()
+	{
+		pg_free_result($this->context->result());
+	}
+
+	public function affected_rows()
+	{
+		return pg_affected_rows($this->context->result());
+	}
+
+	public function num_rows()
+	{
+		return pg_num_rows($this->context->result());
+	}
+
+	public function seek($offset = 0)
+	{
+		return pg_result_seek($this->context->result(), $offset);
+	}
+
+	public function fetch_assoc()
+	{
+		return pg_fetch_assoc($this->context->result());
+	}
+
+	public function fetch_index()
+	{
+		return pg_fetch_array($this->context->result());
+	}
+
+	public function fetch_both()
+	{
+		return pg_fetch_array($this->context->result(), null, PGSQL_BOTH);
+	}
+
+	public function columns()
+	{
+		$field_count = pg_num_fields($this->context->result());
+		$columns = array();
+		for($x=1; $x < $field_count; $x++)
+		{
+			$columns[] = pg_field_name($this->context->result(), $x);
+		}
+		return $columns;
+	}
+
+	public function format($value, $type = null)
 	{
 		$type = strtolower($type);
 		switch($type)
@@ -50,76 +174,51 @@ class DatabasePostgres extends DatabaseVendor
 			case 'numeric':
 			case 'real':
 			case 'double precision':
-				return floatval($value);		
+				return floatval($value);
 		}
 	}
 
-	public function retrieve_results()
-	{
-		$results = array();
-		while($res = pg_get_result($this->con))
-			$results[] = array('res' => $res, 'count' => pg_num_rows($res));
-		return $results;
-	}
-
-	public function is_busy()
-	{
-		return pg_connection_busy($this->con);
-	}
-
-	protected function get_connection_string()
-  {
-    $ret = array();
-
-    foreach(array('host', 'port', 'dbname', 'user', 'password') as $param)
-      if(array_key_exists($param, $this->config))
-        $ret[] = $param.'='.$this->config[$param];
-
-    return implode(' ', $ret);
-  }
-
 	public function schema_sql()
-	{
-		return "
-			SELECT table_schema as schema, table_name as table, column_name as column, (is_nullable='NO')::integer as required, 
-				data_type as type, column_default as default, character_maximum_length as text_length
-      FROM information_schema.columns
-      WHERE table_catalog=current_database()
-      AND table_schema NOT IN ('pg_catalog', 'information_schema')
-      ORDER BY ordinal_position;";
+  {
+		return 'SELECT
+	table_schema as schema,
+	table_name as table,
+	column_name as column,
+	(is_nullable=\'NO\') as required,
+	data_type as type, 
+	column_default as "default", 
+	character_maximum_length as "text_length"
+FROM
+	information_schema.columns';
 	}
-	
+
 	public function pkey_sql()
 	{
-		return "
-			SELECT table_constraints.table_schema as schema, table_constraints.table_name as table, key_column_usage.column_name as column
-			FROM information_schema.key_column_usage
-			JOIN information_schema.table_constraints USING (constraint_catalog, constraint_schema, constraint_name)
-			WHERE constraint_type='PRIMARY KEY'
-			ORDER BY key_column_usage.ordinal_position;";
+		return "SELECT table_schema as \"schema\", table_name as \"table\", column_name as \"column\"
+      FROM information_schema.columns
+      WHERE table_schema = database() AND (column_key = 'PRI')";
 	}
 
 	public function fkey_sql()
 	{
-		return "
-			SELECT fkey.constraint_name as name, use.table_schema as schema, use.table_name as table, use.column_name as column, 
-				col.table_schema as ref_schema, col.table_name as ref_table, col.column_name as ref_column
-			FROM information_schema.key_column_usage as col
-			JOIN information_schema.table_constraints as pkey ON (pkey.constraint_name=col.constraint_name)
-			JOIN information_schema.referential_constraints as ref ON (ref.unique_constraint_name=pkey.constraint_name)
-			JOIN information_schema.table_constraints as fkey ON (fkey.constraint_name=ref.constraint_name)
-			JOIN information_schema.key_column_usage  as use on (use.constraint_name=fkey.constraint_name)
-			WHERE 
-			pkey.constraint_type='PRIMARY KEY'
-			AND fkey.constraint_type='FOREIGN KEY';";
+		return '
+      SELECT
+        CONSTRAINT_NAME as "name",
+        CONSTRAINT_SCHEMA as "schema",
+        table_name as "table",
+        column_name as "column",
+        referenced_table_schema as "ref_schema",
+        referenced_table_name as "ref_table",
+        referenced_column_name as "ref_column"
+      FROM information_schema.key_column_usage
+      WHERE
+        referenced_table_name IS NOT NULL
+        AND CONSTRAINT_SCHEMA=database()
+      ORDER BY table_name, ordinal_position';
 	}
 
-	public function get_last_column_default($table_name, $column_name)
+	public function sequence_sql($column_id)
 	{
-		$desc = Db::desc_table($table_name);
-		$sequence = $desc[$column_name]['default'];
-		return str_replace('nextval(', 'currval(', $sequence);
+
 	}
-
 }
-

@@ -1,6 +1,6 @@
 <?php
 
-class DatabaseResult extends Db implements Countable, Iterator, Arrayaccess
+class DatabaseResult implements Countable, Iterator, Arrayaccess
 {
 
   const RESULT_ASSOC = 0;
@@ -26,6 +26,11 @@ class DatabaseResult extends Db implements Countable, Iterator, Arrayaccess
 
 		$this->database->set_context($resource);
 		$this->count = $this->database->num_rows();
+	}
+
+	public function __destruct()
+	{
+		$this->database()->free_result();
 	}
 
   public function set_result($mode = Database::RESULT_ASSOC)
