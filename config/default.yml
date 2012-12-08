@@ -21,4 +21,4 @@ route:
   default: Home
   error: Error404
 autoload:
-	callbacks: [ [Model ,GenerateSubClass] ]
+  callbacks: [ [Model ,GenerateSubClass] ]
