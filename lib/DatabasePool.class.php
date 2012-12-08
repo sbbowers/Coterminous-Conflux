@@ -1,12 +1,22 @@
 <?php
+// DatabasePool is a singleton class that is used to manage your database connections
 class DatabasePool
 {
-	private 
+	protected 
 		$private_pool = array(),
 		$shared_pool = array(),
 		$close_function = null;
 
-	public function __construct()
+	public static function acquire()
+	{
+		static $instance = null;
+		if(!$instance)
+			$instance = new DatabasePool();
+
+		return $instance;
+	}
+
+	protected function __construct()
 	{
 	}
 
@@ -15,35 +25,57 @@ class DatabasePool
 		//This needs to be configured to close all the connections in the pool, not sure on the best way for this to know the right function to call
 	}
 
-	public function get_connection($object)
+	public static function connect($db_name)
 	{
-		$id = $object->id();
-		if(array_key_exists($id, $this->private_pool))
-			return $this->private_pool[$id];
-		if(count($this->shared_pool) == 0)
-			$this->shared_pool[] = $object->new_connection();
-		return current($this->shared_pool);
-	}
-
-	public function start_private($object)
-	{
-		$id = $object->id();
-		if(array_key_exists($id, $this->private_pool))
-			return;
-		if(count($this->shared_pool) == 0)
-			$this->shared_pool[] = $object->new_connection();
-		$connection = array_pop($this->shared_pool);
-		$this->private_pool[$id] = $connection;
-	}
-
-	public function stop_private($object)
-	{
-		$id = $object->id();
-		if(array_key_exists($id, $this->private_pool))
+		foreach(self::acquire()->shared_pool as $conn)
 		{
-			$this->shared_pool[] = $this->private_pool[$id];
-			unset($this->private_pool[$id]);
+			if($conn->get_name() == $db_name)
+				return $conn;
 		}
+		
+		return self::acquire()->shared_pool[] = Database::connect($db_name);
+	}
+
+	public function has_lock(Database $connection)
+	{
+		$key = array_search($connection, $this->shared_pool, true);
+		if($key!==false)
+		{
+			unset($this->shared_pool[$key]);
+			$this->private_pool[] = $connection;
+		}
+		else if(array_search($connection, $this->private_pool, true) !== false)
+			throw new Exception("Connection {$connection->get_name()} already locked");
+
+		return $connection;
+	}
+
+	public function lock(Database $connection)
+	{
+		$key = array_search($connection, $this->shared_pool, true);
+		if($key!==false)
+		{
+			unset($this->shared_pool[$key]);
+			$this->private_pool[] = $connection;
+		}
+		else if(array_search($connection, $this->private_pool, true) !== false)
+			throw new Exception("Connection {$connection->get_name()} already locked");
+
+		return $connection;
+	}
+
+	public function release(Database $connection)
+	{
+		$key = array_search($connection, $this->private_pool, true);
+		if($key!==false)
+		{
+			unset($this->private_pool[$key]);
+			$this->shared_pool[] = $connection;
+		}
+		else if(array_search($connection, $this->shared_pool, true) !== false)
+			throw new Exception("Connection {$connection->get_name()} not locked");
+
+		return $connection;
 	}
 
 }

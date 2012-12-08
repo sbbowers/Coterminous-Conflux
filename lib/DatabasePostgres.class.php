@@ -2,50 +2,37 @@
 class DatabasePostgres extends Database
 {
 	protected
-		$config = null,
 		$connection_method = null,
-		$context = null,
 		$last_context = null;
 
-	public function __construct($config = null)
+	public function __construct($name, $config = null)
 	{
-		if($config === null)
-			return;
-
-		$this->config = $config;
+	  parent::__construct($name, $config);
 
 		$this->connection_method = 'sync';
 		if(array_key_exists('query_mode', $this->config))
 			$this->connection_method = $this->config['query_mode'];
-		
-	}
 
-	public function new_connection()
-	{
+		$this->connection = pg_connect($this->get_connection_string(), PGSQL_CONNECT_FORCE_NEW);
 
-		$connection_string = $this->get_connection_string();
-		$connection = pg_connect($connection_string, PGSQL_CONNECT_FORCE_NEW);
-
-		if($connection === false)
-		{
+		if($this->connection === false)
 			throw new Exception('Postgres Connection Failed');
-		}
-		return $connection;
 	}
 
 	private function get_connection_string()
 	{
-		$valid_options = array();
-		$valid_options['host'] = true;
-		$valid_options['hostaddr'] = true;
-		$valid_options['port'] = true;
-		$valid_options['dbname'] = true;
-		$valid_options['user'] = true;
-		$valid_options['password'] = true;
-		$valid_options['connect_timeout'] = true;
-		$valid_options['options'] = true;
-		$valid_options['sslmode'] = true;
-		$valid_options['service'] = true;
+		$valid_options = array(
+			'host' => true,
+			'hostaddr' => true,
+			'port' => true,
+			'dbname' => true,
+			'user' => true,
+			'password' => true,
+			'connect_timeout' => true,
+			'options' => true,
+			'sslmode' => true,
+			'service' => true,
+		);
 
 		$connection_string = '';
 		foreach($this->config as $key => $value)
@@ -69,24 +56,6 @@ class DatabasePostgres extends Database
 			throw new Exception('Unknown Postgres Query Method: '.$this->connection_method);
 		$this->last_context = new DatabasePostgresContext($result, $this->get_connection());
 		return new DatabaseResult($this, $this->last_context, $sql);
-	}
-
-	public function begin()
-	{
-		$this->start_private();
-		$this->exec_sync('BEGIN');
-	}
-
-	public function commit()
-	{
-		$this->exec_sync('COMMIT');
-		$this->stop_private();
-	}
-
-	public function rollback()
-	{
-		$this->exec_sync('ROLLBACK');
-		$this->stop_private();
 	}
 
 	private function exec_sync($sql)
