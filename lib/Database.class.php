@@ -5,36 +5,61 @@
 
 abstract class Database {
 
-  protected
-    $connection = null,
+  protected 
+    $connection = null, 
     $context = null,
-    $name = null,
-    $config = null;
+    $config = null,
+    $config_name = null,
+    $id = null;
+  private static 
+    $pool = array(),
+    $object_id_sequence = 0;
   
-  public static final function connect($db_name = 'default')
+  public static final function connect($db_config_name = 'default')
   {
-    if($db_name == 'default')
-      $db_name = Config::find('connection', 'default');
+    if($db_config_name == 'default')
+      $db_config_name = Config::find('connection', 'default');
 
-    if(!$db_name)
+    if(!$db_config_name)
       throw new Exception("No default connection defined in config");
 
-    if(!in_array($db_name, Config::find('connection', 'enabled')))
-      throw new Exception("Connection for $db_name is not enabled");
+    if(!in_array($db_config_name, Config::find('connection', 'enabled')))
+      throw new Exception("Connection for $db_config_name is not enabled");
 
-    $config = Config::get('connection', 'available', $db_name);
+    $config = Config::get('connection', 'available', $db_config_name);
 
     if(!isset($config['vendor']))
-      throw new Exception('Cannot find vendor for connection '.$db_name);
+      throw new Exception('Cannot find vendor for connection '.$db_config_name);
 
     $class = 'Database'.ucwords(strtolower($config['vendor']));
 
-    return new $class($db_name, $config);
+    self::init_pool($db_config_name);
+    $db_object = new $class($config);
+    $db_object->set_config($config);
+    $db_object->set_config_name($db_config_name);
+    $db_object->set_object_sequence();
+    return $db_object;
   }
 
-  public function get_name()
+  private final static function init_pool($config_name)
   {
-    return $this->name;
+		self::$pool[$config_name] = new DatabasePool();
+  }
+
+  private function set_object_sequence()
+  {
+    if(is_null($this->id))
+      $this->id = ++self::$object_id_sequence;
+  }
+
+  protected function set_config($config)
+  {
+    $this->config = $config;
+  }
+
+  protected function set_config_name($db_config_name)
+  {
+    $this->config_name = $db_config_name;
   }
 
   // Sets the result context for retrieval methods
@@ -43,21 +68,29 @@ abstract class Database {
     $this->context = $context;
   }
 
-  // overridable
-  protected function get_connection()
+	public final function id()
+	{
+		return $this->id;
+	}
+
+  public final function start_private()
   {
-    return $this->connection;
+		self::$pool[$this->config_name]->start_private($this);
+  }
+
+  public final function stop_private()
+  {
+		self::$pool[$this->config_name]->stop_private($this);
+  }
+
+  protected final function get_connection()
+  {
+		return self::$pool[$this->config_name]->get_connection($this);
   }
 
   // Use the Database::connect() factory method to construct an instance
-  // Extend this method in your driver class
-  protected function __construct($name, $config)
-  {
-    if($config === null)
-      throw new Exception("Database configuration missing for $name");
-    $this->name = $name;
-    $this->config = $config;
-  }  
+  protected abstract function __construct($config_array); 
+  public abstract function new_connection();
 
   // Execute some SQL and return a DatabaseResult
   public abstract function exec($sql); // return DatabaseResult
@@ -77,30 +110,9 @@ abstract class Database {
   public abstract function columns();
 
   // Transaction
-
-  public function begin()
-  {
-    DatabasePool::acquire()->lock($this);
-    //$this->exec('SET autocommit=0;');
-    $this->exec('BEGIN');
-    return $this;
-  }
-
-  public function commit()
-  {
-    $this->exec('COMMIT');
-    //$this->exec('SET autocommit=1;');
-    DatabasePool::acquire()->release($this);
-    return $this;
-  }
-
-  public function rollback()
-  {
-    $this->exec('ROLLBACK');
-    //$this->exec('SET autocommit=1;');
-    DatabasePool::acquire()->release($this);
-    return $this;
-  }
+  public abstract function begin();
+  public abstract function commit();
+  public abstract function rollback();
 
   // Cleanup
   public abstract function free_result();
