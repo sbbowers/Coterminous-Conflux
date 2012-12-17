@@ -1,47 +1,32 @@
 <?php
 class DatabaseMysql extends Database
 {
-  public function __construct($name, $config)
+  protected 
+    $context = null;
+
+  public function __construct($config = null)
   {
-    parent::__construct($name, $config);
+    if($config === null)
+      return;
+  }
 
-		$this->connection = new mysqli($this->config['host'], $this->config['user'], $this->config['password'], $this->config['dbname']);
+	public function new_connection()
+	{
+		$connection = new mysqli($this->config['host'], $this->config['user'], $this->config['password'], $this->config['database']);
 
-    if($this->connection->connect_error)
+    if($connection->connect_error)
       throw new Exception('DB Connection Error: '.$this->connection->connect_errno.' '.$this->connection->connect_error);
+
+		return $connection;
 	}
 
   public function exec($sql)
   {
-    $this->context = $this->get_connection()->query($sql);
+    $this->context = $this->connection->query($sql);
     if(!$this->context)
-      throw new Exception('Error Sending Query: '.$this->connection->connect_errno.' '.$this->connection->error."($sql)");
-
-    if(!($this->context instanceof mysqli_result))
-      $this->context = null;
+      throw new Exception('Error Sending Query: '.$this->connection->connect_errno.' '.$this->connection->error);
 
     return new DatabaseResult($this, $this->context, $sql);
-  }
-
-  public function begin()
-  {
-    DatabasePool::acquire()->lock($this);
-    $this->get_connection()->autocommit(false);
-    return $this;
-  }
-
-  public function commit()
-  {
-    $this->get_connection()->commit();
-    $this->get_connection()->autocommit(false);
-    return $this;
-  }
-
-  public function rollback()
-  {
-    $this->get_connection()->rollback();
-    $this->get_connection()->autocommit(false);
-    return $this;
   }
 
   public function affected_rows()
@@ -49,15 +34,35 @@ class DatabaseMysql extends Database
     return $this->get_connection()->affected_rows;
   }
 
+
+	public function begin()
+	{
+		$this->start_private();
+		$this->get_connection()->autocommit(false);
+	}
+
+  public function commit()
+	{
+		$this->get_connection()->commit();
+		$this->get_connection()->autocommit(true);
+		$this->stop_private();
+	}
+
+  public function rollback()
+	{
+		$this->get_connection()->rollback();
+		$this->get_connection()->autocommit(true);
+		$this->stop_private();
+	}
+
 	public function free_result()
 	{
-		$this->connection->close();
+		$this->context->close();
 	}
 
   public function num_rows()
   {
-    print_r($this->context);
-    return $this->context ? $this->context->num_rows : 0;
+    return $this->context->num_rows;
   }
 
   public function seek($offset = 0)
