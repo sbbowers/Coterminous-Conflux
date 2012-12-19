@@ -13,6 +13,8 @@ class Application
 		try
 		{
 			list($controller, $action, $extra) = Route::get();
+			if(extension_loaded('newrelic'))
+				newrelic_name_transaction("$controller/$action");
 			
 			$controller = new $controller();
 			
