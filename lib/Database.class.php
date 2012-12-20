@@ -3,17 +3,11 @@
 // Defines database operations
 // Class database uses the concept of a context to provide the basic operations to the DatabaseResult class
 
-abstract class Database {
+abstract class Database extends DatabasePool{
 
   protected 
     $connection = null, 
-    $context = null,
-    $config = null,
-    $config_name = null,
-    $id = null;
-  private static 
-    $pool = array(),
-    $object_id_sequence = 0;
+    $context = null;
   
   public static final function connect($db_config_name = 'default')
   {
@@ -33,33 +27,7 @@ abstract class Database {
 
     $class = 'Database'.ucwords(strtolower($config['vendor']));
 
-    self::init_pool($db_config_name);
-    $db_object = new $class($config);
-    $db_object->set_config($config);
-    $db_object->set_config_name($db_config_name);
-    $db_object->set_object_sequence();
-    return $db_object;
-  }
-
-  private final static function init_pool($config_name)
-  {
-		self::$pool[$config_name] = new DatabasePool();
-  }
-
-  private function set_object_sequence()
-  {
-    if(is_null($this->id))
-      $this->id = ++self::$object_id_sequence;
-  }
-
-  protected function set_config($config)
-  {
-    $this->config = $config;
-  }
-
-  protected function set_config_name($db_config_name)
-  {
-    $this->config_name = $db_config_name;
+    return new $class($db_config_name, $config);
   }
 
   // Sets the result context for retrieval methods
@@ -68,28 +36,7 @@ abstract class Database {
     $this->context = $context;
   }
 
-	public final function id()
-	{
-		return $this->id;
-	}
-
-  public final function start_private()
-  {
-		self::$pool[$this->config_name]->start_private($this);
-  }
-
-  public final function stop_private()
-  {
-		self::$pool[$this->config_name]->stop_private($this);
-  }
-
-  protected final function get_connection()
-  {
-		return self::$pool[$this->config_name]->get_connection($this);
-  }
-
   // Use the Database::connect() factory method to construct an instance
-  protected abstract function __construct($config_array); 
   public abstract function new_connection();
 
   // Execute some SQL and return a DatabaseResult
