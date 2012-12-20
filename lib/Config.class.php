@@ -14,7 +14,7 @@ class Config
 		foreach($args as $lookup)
 		{
 			if(!is_array($ret) || !array_key_exists($lookup, $ret))
-				throw new Exception("Searching for bad configuration value [".implode('][',$args)."]");
+				throw new ConfigException("Searching for bad configuration value [".implode('][',$args)."]");
 			$ret = $ret[$lookup];
 		}
 		return $ret;
@@ -27,7 +27,7 @@ class Config
 			$args = func_get_args();
 			return call_user_func_array(array('Config', 'get'), $args);
 		}
-		catch(Exception $e)
+		catch(ConfigException $e)
 		{
 			//Debug:: Config Key Not Found
 			return null;
