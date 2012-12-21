@@ -13,6 +13,8 @@ class Application
 		try
 		{
 			list($controller, $action, $extra) = Route::get();
+			if(extension_loaded('newrelic'))
+				newrelic_name_transaction("$controller/$action");
 			
 			$controller = new $controller();
 			
@@ -23,6 +25,18 @@ class Application
 			$controller = $e->get_controller();
 		}
 		
+		try
+		{
+			$handler = Config::get('auth', 'callback');
+			$user_permissions = array_unique(call_user_func($handler));
+			$required_permissions = array_unique($controller->get_permissions($action));
+			if(count(array_intersect($user_permissions, $required_permissions)) != count($required_permissions))
+				die('Permission Deneied'); // Replace this with some nice page!
+		}
+		catch(ConfigException $e)
+		{
+
+		}
 		$layout = $controller->get_layout();
 		$layout = new $layout();
 		

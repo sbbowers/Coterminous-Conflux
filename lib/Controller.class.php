@@ -5,11 +5,22 @@ class Controller extends Render
 	protected
 		$default_action = 'default', // override in child class
 		$layout = null,
-		$expose_data = array();
+		$expose_data = array(),
+		$perms = [],
+		$action_perms = []; 
 
 	public function __construct()
 	{
 		$this->layout = Config::get('default_layout');
+	}
+
+	public function get_permissions($action)
+	{
+		if($action == '')
+			$action = 'default';
+		if(array_key_exists($action, $this->action_perms))
+			$this->perms = array_merge($this->action_perms[$action], $this->perms);
+		return $this->perms;
 	}
 
 	// Lookup the action function and execute it; The action is responsible 

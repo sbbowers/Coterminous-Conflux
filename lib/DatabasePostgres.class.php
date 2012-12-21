@@ -7,12 +7,10 @@ class DatabasePostgres extends Database
 		$context = null,
 		$last_context = null;
 
-	public function __construct($config = null)
+	public function __construct($database_name, $config)
 	{
-		if($config === null)
-			return;
 
-		$this->config = $config;
+		parent::__construct($database_name, $config);
 
 		$this->connection_method = 'sync';
 		if(array_key_exists('query_mode', $this->config))

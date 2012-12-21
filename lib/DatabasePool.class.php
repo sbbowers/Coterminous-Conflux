@@ -1,13 +1,37 @@
 <?php
-class DatabasePool
+abstract class DatabasePool
 {
-	private 
+	private static
 		$private_pool = array(),
 		$shared_pool = array(),
-		$close_function = null;
+		$object_id_sequence = 0;
 
-	public function __construct()
+	protected
+		$id = null,
+		$database_name = null,
+		$config = null;
+
+	protected function __construct($database_name, $config)
 	{
+		$this->config = $config;
+		$this->database_name = $database_name;
+		$this->set_object_sequence();
+
+		self::init_pool($this->database_name);
+	}
+
+	protected final static function init_pool($config_name)
+	{
+		if(!array_key_exists($config_name, self::$private_pool))
+			self::$private_pool[$config_name] = array();
+		if(!array_key_exists($config_name, self::$shared_pool))
+			self::$shared_pool[$config_name] = array();
+	}
+
+	private function set_object_sequence()
+	{
+		if(is_null($this->id))
+			$this->id = ++self::$object_id_sequence;
 	}
 
 	public function __destruct()
@@ -15,34 +39,31 @@ class DatabasePool
 		//This needs to be configured to close all the connections in the pool, not sure on the best way for this to know the right function to call
 	}
 
-	public function get_connection($object)
+	protected final function get_connection()
 	{
-		$id = $object->id();
-		if(array_key_exists($id, $this->private_pool))
-			return $this->private_pool[$id];
-		if(count($this->shared_pool) == 0)
-			$this->shared_pool[] = $object->new_connection();
-		return current($this->shared_pool);
+		if(array_key_exists($this->id, self::$private_pool[$this->database_name]))
+			return self::$private_pool[$this->database_name][$this->id];
+		if(count(self::$shared_pool[$this->database_name]) == 0)
+			self::$shared_pool[$this->database_name][] = $this->new_connection();
+		return current(self::$shared_pool[$this->database_name]);
 	}
 
-	public function start_private($object)
+	public final function start_private()
 	{
-		$id = $object->id();
-		if(array_key_exists($id, $this->private_pool))
+		if(array_key_exists($this->id, self::$private_pool[$this->database_name]))
 			return;
-		if(count($this->shared_pool) == 0)
-			$this->shared_pool[] = $object->new_connection();
-		$connection = array_pop($this->shared_pool);
-		$this->private_pool[$id] = $connection;
+		if(count(self::$shared_pool[$this->database_name]) == 0)
+			self::$shared_pool[$this->database_name][] = $this->new_connection();
+		$connection = array_pop(self::$shared_pool[$this->database_name]);
+		self::$private_pool[$this->database_name][$this->id] = $connection;
 	}
 
-	public function stop_private($object)
+	public final function stop_private()
 	{
-		$id = $object->id();
-		if(array_key_exists($id, $this->private_pool))
+		if(array_key_exists($this->id, self::$private_pool[$this->database_name]))
 		{
-			$this->shared_pool[] = $this->private_pool[$id];
-			unset($this->private_pool[$id]);
+			self::$shared_pool[$this->database_name][] = self::$private_pool[$this->database_name][$this->id];
+			unset(self::$private_pool[$this->database_name][$this->id]);
 		}
 	}
 
