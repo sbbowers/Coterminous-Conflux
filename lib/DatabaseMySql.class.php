@@ -4,27 +4,30 @@ class DatabaseMysql extends Database
   protected 
     $context = null;
 
-  public function __construct($config = null)
+  public function __construct($database_name, $config)
   {
     if($config === null)
       return;
+
+    parent::__construct($database_name, $config);
   }
 
 	public function new_connection()
 	{
-		$connection = new mysqli($this->config['host'], $this->config['user'], $this->config['password'], $this->config['database']);
+		$connection = new mysqli($this->config['host'], $this->config['user'], $this->config['password'], $this->config['dbname']);
 
     if($connection->connect_error)
-      throw new Exception('DB Connection Error: '.$this->connection->connect_errno.' '.$this->connection->connect_error);
+      throw new Exception('DB Connection Error: '.$connection->connect_errno.' '.$connection->connect_error);
 
 		return $connection;
 	}
 
   public function exec($sql)
   {
-    $this->context = $this->connection->query($sql);
+    $connection = $this->get_connection();
+    $this->context = $connection->query($sql);
     if(!$this->context)
-      throw new Exception('Error Sending Query: '.$this->connection->connect_errno.' '.$this->connection->error);
+      throw new Exception('Error Sending Query: '.$connection->connect_errno.' '.$connection->error);
 
     return new DatabaseResult($this, $this->context, $sql);
   }
