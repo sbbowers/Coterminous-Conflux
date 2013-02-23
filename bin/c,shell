@@ -5,7 +5,16 @@ DIR=$(dirname $(dirname $0))
 while getopts ":r" opt; do
   case $opt in
     r)
-      php -r "require '$DIR/bootstrap.php'; Console::shell();"
+      SDIR=$(pwd)
+
+      while [ "$SDIR" != "/" ]; do
+        SDIR=$(dirname $SDIR)
+        if [ -f "$SDIR/.bootstrap.php" ]; then
+          DIR=$SDIR
+          break
+        fi
+      done
+      php -r "require '$DIR/.bootstrap.php'; Console::shell();" -- "${*:1}"
       exit
       ;;
     s)
