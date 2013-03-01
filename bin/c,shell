@@ -2,31 +2,20 @@
 
 DIR=$(dirname $(dirname $0))
 
-while getopts ":r" opt; do
-  case $opt in
-    r)
-      SDIR=$(pwd)
-
-      while [ "$SDIR" != "/" ]; do
-        SDIR=$(dirname $SDIR)
-        if [ -f "$SDIR/.bootstrap.php" ]; then
-          DIR=$SDIR
-          break
-        fi
-      done
-      php -r "require '$DIR/.bootstrap.php'; Console::shell();" -- "${*:1}"
-      exit
-      ;;
-    s)
-      SILENT=1      
-      ;;
-  esac
+# Search for coterminous conflux's bootstrap file
+SDIR=$(pwd)
+while [ "$SDIR" != "/" ]; do
+  SDIR=$(dirname $SDIR)
+  if [ -f "$SDIR/.bootstrap.php" ]; then
+    DIR=$SDIR
+    break
+  fi
 done
 
+# Use readline if possible
 if [[ -n $(which rlwrap ) ]] ; then
-  rlwrap -AaI -p'1;34' $0 -r
-  exit
+  rlwrap -AaI -p'1;34' php -r "require '$DIR/.bootstrap.php'; Console::shell();" -- "${@:1}"
+else
+  [[ $SILENT ]] || echo -e '\033[1;31mFor a better experience, please install the "rlwrap" package\033[0m'
+  php -r "require '$DIR/.bootstrap.php'; Console::shell();" -- "${@:1}"
 fi
-
-[[ $SILENT ]] || echo -e '\033[1;31mFor a better experience, please install the "rlwrap" package\033[0m'
-php -r "require '$DIR/bootstrap.php'; Console::shell();"
