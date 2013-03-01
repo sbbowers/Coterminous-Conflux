@@ -122,10 +122,9 @@ class Console
 
 	protected static function detect_symfony($opts)
 	{
-		if(!array_key_exists('symfony_dir', $opts))
+		$config = isset($opts['symfony_dir']) ? $opts['symfony_dir'] : getenv('COTERMINOUS_SYMFONY');
+		if(!$config)
 			return;
-
-		$config = $opts['symfony_dir'] ? $opts['symfony_dir'] : getenv('COTERMINOUS_SYMFONY');
 
 		list($root, $app, $env, $debug) = explode(':', $config) + array(null, null, null, 1);
 
