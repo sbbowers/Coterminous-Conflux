@@ -24,6 +24,7 @@ class ConsoleInteractive extends Console
 
 	public function start()
 	{
+		ini_set('display_errors', 0);
 		while($this->running)
 		{
 			$this->get_command();
