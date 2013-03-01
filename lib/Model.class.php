@@ -6,8 +6,10 @@
 	Extend your own to add functionality
 */
 
-class Model extends Hash
+class Model implements ArrayAccess, Iterator, Countable
 {
+	use Hash;
+
 	protected
 		$retrieved_from_db = false,
 		$database = null, 
@@ -38,10 +40,6 @@ class Model extends Hash
 
 		if($dataset)
 			$this->load($dataset);
-
-		if(is_array($dataset) || is_object($dataset))
-			foreach($dataset as $key => $value)
-				$hash_data[$key] = $value;
 	}
 
 	// Takes a row of information and pulls out the primary key definition.
@@ -81,7 +79,7 @@ class Model extends Hash
 		if(count($res) != 1)
 			throw new Exception('failed to load model for table '.$this->table_name);
 	
-		$this->hash_data = $res->fetch();
+		$this->from_array($res->fetch());
 		$this->retrieved_from_db = true;
 	}
 
@@ -89,12 +87,11 @@ class Model extends Hash
 	{
 		if($this->retrieved_from_db) // use update
 		{
-			$data = $this->hash_data;
-			foreach($this->primary_key as $key => $value)
-				unset($data[$key]);
+			// Subtract the primary key from the fields to update
+			$fields = array_diff_key($this->to_array(), $this->primary_key);
 
 			$set = array();
-			foreach($data as $key => $value)
+			foreach($fields as $key => $value)
 				$set[] = $key."=".Db::format($value, $this->table_name, $key, $this->database);
 			$set = implode(', ', $set);
 
@@ -104,7 +101,7 @@ class Model extends Hash
 		else // use insert
 		{
 			$set = array();
-			foreach($this->hash_data as $key => $value)
+			foreach($this->to_array() as $key => $value)
 				$set[$key] = Db::format($value, $this->table_name, $key, $this->database);
 						
 			$keys = implode(', ', array_keys($set));
@@ -133,8 +130,8 @@ class Model extends Hash
 		$where = array();
 		foreach($pkey_def as $key)
 		{
-			if(isset($this->hash_data[$key]))
-				$where[] = $key.'='.Db::format($this->hash_data[$key], $this->table_name, $key, $this->database);
+			if(isset($this[$key]))
+				$where[] = $key.'='.Db::format($this[$key], $this->table_name, $key, $this->database);
 			else
 				$where[] = $key.'='.Db::get_last_column_default($this->table_name, $key);
 		}
@@ -144,7 +141,7 @@ class Model extends Hash
 		if(count($res) != 1)
 			throw new Exception('failed to load model for table '.$this->table_name);
 	
-		$this->hash_data = $res->fetch();
+		$this->from_array($res->fetch());
 		$this->retrieved_from_db = true;
 	}
 
