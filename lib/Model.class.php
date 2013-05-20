@@ -124,7 +124,7 @@ class Model implements ArrayAccess, Iterator, Countable
 	// After an insert, load_last_insert is used to reload the data from sequence values if necessary
 	private function load_last_insert()
 	{
-		$pkey_def = Schema::primary_key($this->table_name, $this->database);
+		$pkey_def = Schema::pkey($this->table_name, $this->database);
 		$desc = Schema::define($this->table_name, $this->database);
 
 		$where = array();
