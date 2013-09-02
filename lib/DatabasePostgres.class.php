@@ -180,45 +180,45 @@ class DatabasePostgres extends Database
 
 	public function schema_sql()
   {
-		return 'SELECT
-	table_schema as schema,
-	table_name as table,
-	column_name as column,
-	(is_nullable=\'NO\') as required,
-	data_type as type, 
-	column_default as "default", 
-	character_maximum_length as "text_length"
-FROM
-	information_schema.columns';
+		return "SELECT 
+				table_schema as schema, table_name as table, column_name as column, (is_nullable='NO')::integer as required, 
+				data_type as type, column_default as default, character_maximum_length as text_length
+			FROM information_schema.columns
+			WHERE table_catalog=current_database()
+			AND table_schema NOT IN ('pg_catalog', 'information_schema')
+			ORDER BY ordinal_position;";
 	}
 
 	public function pkey_sql()
 	{
-		return "SELECT table_schema as \"schema\", table_name as \"table\", column_name as \"column\"
-      FROM information_schema.columns
-      WHERE table_schema = database() AND (column_key = 'PRI')";
+		return "SELECT table_constraints.table_schema as schema, table_constraints.table_name as table, key_column_usage.column_name as column
+			FROM information_schema.key_column_usage
+			JOIN information_schema.table_constraints USING (constraint_catalog, constraint_schema, constraint_name)
+			WHERE constraint_type='PRIMARY KEY'
+			ORDER BY key_column_usage.ordinal_position;";
 	}
 
 	public function fkey_sql()
 	{
-		return '
-      SELECT
-        CONSTRAINT_NAME as "name",
-        CONSTRAINT_SCHEMA as "schema",
-        table_name as "table",
-        column_name as "column",
-        referenced_table_schema as "ref_schema",
-        referenced_table_name as "ref_table",
-        referenced_column_name as "ref_column"
-      FROM information_schema.key_column_usage
-      WHERE
-        referenced_table_name IS NOT NULL
-        AND CONSTRAINT_SCHEMA=database()
-      ORDER BY table_name, ordinal_position';
+		return "SELECT 
+				fkey.constraint_name as name, use.table_schema as schema, use.table_name as table, use.column_name as column, 
+				col.table_schema as ref_schema, col.table_name as ref_table, col.column_name as ref_column
+			FROM information_schema.key_column_usage as col
+			JOIN information_schema.table_constraints as pkey ON (pkey.constraint_name=col.constraint_name)
+			JOIN information_schema.referential_constraints as ref ON (ref.unique_constraint_name=pkey.constraint_name)
+			JOIN information_schema.table_constraints as fkey ON (fkey.constraint_name=ref.constraint_name)
+			JOIN information_schema.key_column_usage  as use ON (use.constraint_name=fkey.constraint_name)
+			WHERE 
+				pkey.constraint_type='PRIMARY KEY'
+				AND fkey.constraint_type='FOREIGN KEY';";
 	}
 
 	public function sequence_sql($column_id)
 	{
-
+		//$desc = Db::desc_table($table_name);
+		//$sequence = $desc[$column_name]['default'];
+		//return str_replace('nextval(', 'currval(', $sequence);
 	}
+
+
 }
