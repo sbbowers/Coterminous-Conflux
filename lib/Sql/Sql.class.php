@@ -1,6 +1,7 @@
 <?php
+namespace C;
 
-class SqlException extends Exception {}
+class SqlException extends \Exception {}
 /*
 
   Class Sql - builds sql queries via a model heirarchy branded c,ql 
@@ -120,7 +121,7 @@ class SqlException extends Exception {}
 
 */
 
-class Sql implements ArrayAccess
+class Sql implements \ArrayAccess
 {
   protected
     $schema = null;

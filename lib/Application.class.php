@@ -1,4 +1,6 @@
 <?php
+namespace C;
+
 class Application
 {
 	private static $stats = array();

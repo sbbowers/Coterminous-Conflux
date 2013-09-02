@@ -1,4 +1,5 @@
 <?php
+namespace C;
 
 // Utility namespace
 class Util

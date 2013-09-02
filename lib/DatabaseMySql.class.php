@@ -1,4 +1,6 @@
 <?php
+namespace C;
+
 class DatabaseMysql extends Database
 {
   protected 
@@ -14,7 +16,7 @@ class DatabaseMysql extends Database
 
 	public function new_connection()
 	{
-		$connection = new mysqli($this->config['host'], $this->config['user'], $this->config['password'], $this->config['dbname']);
+		$connection = new \mysqli($this->config['host'], $this->config['user'], $this->config['password'], $this->config['dbname']);
 
     if($connection->connect_error)
       throw new Exception('DB Connection Error: '.$connection->connect_errno.' '.$connection->connect_error);

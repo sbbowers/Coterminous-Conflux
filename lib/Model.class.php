@@ -1,4 +1,5 @@
 <?php
+namespace C;
 
 /*
 	Base Class for Model abstraction of database tables
@@ -6,7 +7,7 @@
 	Extend your own to add functionality
 */
 
-class Model implements ArrayAccess, Iterator, Countable
+class Model implements \ArrayAccess, \Iterator, \Countable
 {
 	use Hash;
 
@@ -33,9 +34,9 @@ class Model implements ArrayAccess, Iterator, Countable
 			$this->table_name = $table_name;
 
 		if(!$this->table_name)
-			throw new Exception('Cannot create model object; no table definition provided');
+			throw new \Exception('Cannot create model object; no table definition provided');
 
-		$r = new ReflectionClass($this);
+		$r = new \ReflectionClass($this);
 		$this->database = $r->getNamespaceName() ?: $database;
 
 		if($dataset)
@@ -59,7 +60,7 @@ class Model implements ArrayAccess, Iterator, Countable
 			if(isset($primary_key[$column_name]))
 				$ret[$column_name] = $primary_key[$column_name];
 			else
-				throw new Exception('Could not find primary key '.$column_name.' definition for table '.$this->table_name);
+				throw new \Exception('Could not find primary key '.$column_name.' definition for table '.$this->table_name);
 		}
 	
 		$this->primary_key = $ret;
@@ -77,7 +78,7 @@ class Model implements ArrayAccess, Iterator, Countable
 		$res = Db::exec($sql, $this->database);
 
 		if(count($res) != 1)
-			throw new Exception('failed to load model for table '.$this->table_name);
+			throw new \Exception('failed to load model for table '.$this->table_name);
 	
 		$this->from_array($res->fetch());
 		$this->retrieved_from_db = true;
@@ -139,7 +140,7 @@ class Model implements ArrayAccess, Iterator, Countable
 		$res = Db::exec($sql, $this->database);
 
 		if(count($res) != 1)
-			throw new Exception('failed to load model for table '.$this->table_name);
+			throw new \Exception('failed to load model for table '.$this->table_name);
 	
 		$this->from_array($res->fetch());
 		$this->retrieved_from_db = true;
@@ -251,7 +252,7 @@ class Model implements ArrayAccess, Iterator, Countable
 		{
 			$db = Database::connect($database);
 		}
-		catch(Exception $e)
+		catch(\Exception $e)
 		{
 			return false;
 		}

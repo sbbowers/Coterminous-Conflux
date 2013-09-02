@@ -1,4 +1,5 @@
 <?php
+namespace C;
 
 class Console
 {
@@ -143,7 +144,7 @@ class Console
 				{
 					require_once($file);
 					// initialize database manager
-					$databaseManager = new sfDatabaseManager();
+					$databaseManager = new \sfDatabaseManager();
 					$databaseManager->initialize();
 					Console::out('Symfony environment detected: '.$config."\n", 'gray');
 					return;

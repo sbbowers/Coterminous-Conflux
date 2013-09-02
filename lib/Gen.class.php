@@ -1,4 +1,6 @@
 <?php
+namespace C;
+
 /* Class Gen
 	Generate an instance of a class
 	Alternate way to (new ClassName), but supports chaining

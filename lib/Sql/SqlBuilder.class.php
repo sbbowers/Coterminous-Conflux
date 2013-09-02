@@ -1,4 +1,5 @@
 <?php
+namespace C;
 
 class SqlBuilder {
   const IDENTIFIER = '[a-zA-Z][a-zA-Z0-9_]*';

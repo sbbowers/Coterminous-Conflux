@@ -1,4 +1,5 @@
 <?php
+namespace C;
 
 // The serialize class defines the base definition for encoding and 
 // decoding data. Create your own serializers by extending this one 

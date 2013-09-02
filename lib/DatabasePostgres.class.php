@@ -1,4 +1,6 @@
 <?php
+namespace C;
+
 class DatabasePostgres extends Database
 {
 	protected

@@ -1,4 +1,5 @@
 <?php
+namespace C;
 
 class ConsoleInteractive extends Console
 {
@@ -138,7 +139,7 @@ class ConsoleInteractive extends Console
 				$this->command = $this->command."\n";
 			if($this->current_nest() == '>')
 				$this->command = preg_replace('/[\s;]*$/', '', $this->command).';';
-			if(strpos($this->command, ';') == strlen($this->command) - 1 && !Regex::match('/^(echo|return|throw|unset\()/', $this->command))
+			if(strpos($this->command, ';') == strlen($this->command) - 1 && !Regex::match('/^(echo|return|throw|namespace|unset\()/', $this->command))
 				$this->command = 'return '.$this->command;
 		}
 	}

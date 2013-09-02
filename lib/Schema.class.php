@@ -1,4 +1,5 @@
 <?php
+namespace C;
 
 /*
 	Class Schema - Used to look up relational information from the database

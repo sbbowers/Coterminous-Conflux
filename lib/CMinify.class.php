@@ -1,4 +1,6 @@
 <?php
+namespace C;
+
 class CMinify
 {
 	private static $original_base = null;

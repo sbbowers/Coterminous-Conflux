@@ -1,4 +1,5 @@
 <?php
+namespace C;
 
 // Defines database operations
 // Class database uses the concept of a context to provide the basic operations to the DatabaseResult class
@@ -15,17 +16,17 @@ abstract class Database extends DatabasePool{
       $db_config_name = Config::find('connection', 'default');
 
     if(!$db_config_name)
-      throw new Exception("No default connection defined in config");
+      throw new \Exception("No default connection defined in config");
 
     if(!in_array($db_config_name, Config::find('connection', 'enabled')))
-      throw new Exception("Connection for $db_config_name is not enabled");
+      throw new \Exception("Connection for $db_config_name is not enabled");
 
     $config = Config::get('connection', 'available', $db_config_name);
 
     if(!isset($config['vendor']))
-      throw new Exception('Cannot find vendor for connection '.$db_config_name);
+      throw new \Exception('Cannot find vendor for connection '.$db_config_name);
 
-    $class = 'Database'.ucwords(strtolower($config['vendor']));
+    $class = '\C\Database'.ucwords(strtolower($config['vendor']));
 
     return new $class($db_config_name, $config);
   }

@@ -1,4 +1,5 @@
 <?php
+namespace C;
 
 // Class Environemnt - Setup application contexts
 

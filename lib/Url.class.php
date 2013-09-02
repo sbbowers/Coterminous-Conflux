@@ -1,4 +1,6 @@
 <?php
+namespace C;
+
 class Url
 {
 	public static function get($url, $options = array())

@@ -1,5 +1,7 @@
 <?php
-class BaseException extends Exception
+namespace C;
+
+class BaseException extends \Exception
 {
 	public function get_controller()
 	{

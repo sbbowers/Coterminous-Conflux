@@ -1,4 +1,6 @@
 <?php
+namespace C;
+
 // Class Auto - Autoloader class
 //	Supports framework directory specified by FPATH environment variable
 //	Supports application directory specified by APATH environment variable
@@ -17,7 +19,7 @@ class Auto
 		self::$FPATH = dirname(__DIR__);
 		self::$APATH = self::detect_project();
 
-		spl_autoload_register(array(__NAMESPACE__.'\\'.__CLASS__, 'load'));
+		spl_autoload_register(array(__CLASS__, 'load'));
 
 		self::cache_files();
 		self::import_initializers();

@@ -1,4 +1,6 @@
 <?php
+namespace C;
+
 abstract class DatabasePool
 {
 	private static

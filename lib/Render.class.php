@@ -1,6 +1,7 @@
 <?php
+namespace C;
 
-class Render implements ArrayAccess, Iterator
+class Render implements \ArrayAccess, \Iterator
 {
 	private
 		$iterator_position = 0,

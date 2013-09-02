@@ -1,4 +1,5 @@
 <?php
+namespace C;
 
 // Replacement for getopt() that doesn't stop parsing when it sees an unexpected value
 

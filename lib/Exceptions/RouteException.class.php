@@ -1,4 +1,6 @@
 <?php
+namespace C;
+
 class RouteException extends BaseException
 {
 	public function __construct($message, $code, Exception $previous = null)

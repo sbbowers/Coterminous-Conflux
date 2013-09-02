@@ -1,4 +1,5 @@
 <?php
+namespace C;
 
 class Config
 {
@@ -25,7 +26,7 @@ class Config
 		try
 		{
 			$args = func_get_args();
-			return call_user_func_array(array('Config', 'get'), $args);
+			return call_user_func_array(array(__CLASS__, 'get'), $args);
 		}
 		catch(ConfigException $e)
 		{
@@ -51,7 +52,7 @@ class Config
 	public static function load($config_file)
 	{
 		if(is_file($config_file))
-			return Symfony\YAML::load(file_get_contents($config_file));
+			return \Symfony\YAML::load(file_get_contents($config_file));
 		return array();
 	}
 

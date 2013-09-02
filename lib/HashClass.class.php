@@ -1,7 +1,8 @@
 <?php
+namespace C;
 
 // Instantiable class wrapper for Hash trait
-class HashClass implements ArrayAccess, Iterator, Countable 
+class HashClass implements \ArrayAccess, \Iterator, \Countable 
 { 
 	use Hash; 
 

@@ -1,4 +1,5 @@
 <?php
+namespace C;
 
 class Layout extends Render
 {

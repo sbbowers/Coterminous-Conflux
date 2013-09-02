@@ -1,4 +1,5 @@
 <?php
+namespace C;
 /* 
 ArgParse - Argument parsing class for the command line
 

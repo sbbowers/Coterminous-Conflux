@@ -1,6 +1,7 @@
 <?php
+namespace C;
 
-class DatabaseResult implements Countable, Iterator, Arrayaccess
+class DatabaseResult implements \Countable, \Iterator, \Arrayaccess
 {
 
   const RESULT_ASSOC = 0;

@@ -1,4 +1,6 @@
 <?php
+namespace C;
+
 class ConfigException extends BaseException
 {
 	public function __construct($message, $code = null, Exception $previous = null)

@@ -1,4 +1,6 @@
 <?php
+namespace C;
+
 // Class Resolve - Resolve common files types
 // Searches Application and Framework directories and returns the appropriate file
 

@@ -1,4 +1,6 @@
 <?php
+namespace C;
+
 class Element extends Render
 {
 	private 

@@ -1,4 +1,6 @@
 <?php
+namespace C;
+
 /* 
 	Abstract class to define a database vendor interface
 	Implement this class for all of your vendors so you can 

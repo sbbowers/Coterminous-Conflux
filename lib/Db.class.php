@@ -1,4 +1,6 @@
 <?php
+namespace C;
+
 /* 
 	Db - Static Database class for easy access to all of your query needs
 	To use, extend DatabaseVendor to work with your database and define 

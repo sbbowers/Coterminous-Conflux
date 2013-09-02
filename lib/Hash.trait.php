@@ -1,4 +1,5 @@
 <?php
+namespace C;
 
 trait Hash // implements ArrayAccess, Iterator, Countable
 {
