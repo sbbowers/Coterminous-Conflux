@@ -25,7 +25,7 @@ class Schema
 	public static function __callStatic($schema, $params = array())
 	{
 		if(!isset(self::$__resolve[$schema]))
-			throw new Exception("Schema '$schema' not found");
+			throw new \Exception("Schema '$schema' not found");
 
 		return new Schema($schema);
 	}
@@ -43,7 +43,7 @@ class Schema
 			self::$__resolve[$db] = Config::find('connection', 'available', $db, 'database');
 
 			// Capture schema definitions
-			foreach($con->get_columns()) as $row)
+			foreach($con->get_columns() as $row)
 				self::$__data[$row['schema']]['schema'][$row['table']][$row['column']] = $row;
 
 			// Primary keys
