@@ -125,13 +125,13 @@ class DatabaseMysql extends Database
     }
   }
 
-  public function schema_sql()
+  public function get_columns()
   {
-    return '
+    return $this->exec('
       SELECT table_schema as "schema", table_name as "table", column_name as "column", (is_nullable=\'NO\') as required, data_type as type, column_default as "default", character_maximum_length as "text_length"
       FROM information_schema.columns
       WHERE table_schema = database()
-      ORDER BY ordinal_position;';
+      ORDER BY ordinal_position;');
   }
   
   public function pkey_sql()

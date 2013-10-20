@@ -43,7 +43,7 @@ class Schema
 			self::$__resolve[$db] = Config::find('connection', 'available', $db, 'database');
 
 			// Capture schema definitions
-			foreach($con->exec($con->schema_sql()) as $row)
+			foreach($con->get_columns()) as $row)
 				self::$__data[$row['schema']]['schema'][$row['table']][$row['column']] = $row;
 
 			// Primary keys

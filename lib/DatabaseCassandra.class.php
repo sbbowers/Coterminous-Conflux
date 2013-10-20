@@ -1,22 +1,16 @@
 <?php
 namespace C;
 
-class DatabasePostgres extends Database
+class DatabaseCassandra extends Database
 {
 	protected
 		$config = null,
-		$connection_method = null,
 		$context = null,
-		$last_context = null;
+		$result = null;
 
 	public function __construct($database_name, $config)
 	{
-
 		parent::__construct($database_name, $config);
-
-		$this->connection_method = 'sync';
-		if(array_key_exists('query_mode', $this->config))
-			$this->connection_method = $this->config['query_mode'];
 		
 	}
 
@@ -24,11 +18,13 @@ class DatabasePostgres extends Database
 	{
 
 		$connection_string = $this->get_connection_string();
-		$connection = pg_connect($connection_string, PGSQL_CONNECT_FORCE_NEW);
+		$connection = new \PDO($connection_string);
+		if(array_key_exists('keyspace', $this->config))
+			$connection->exec("USE {$this->config['keyspace']}");
 
 		if($connection === false)
 		{
-			throw new Exception('Postgres Connection Failed');
+			throw new Exception('Cassandra Connection Failed');
 		}
 		return $connection;
 	}
@@ -37,109 +33,77 @@ class DatabasePostgres extends Database
 	{
 		$valid_options = array();
 		$valid_options['host'] = true;
-		$valid_options['hostaddr'] = true;
 		$valid_options['port'] = true;
-		$valid_options['dbname'] = true;
-		$valid_options['user'] = true;
-		$valid_options['password'] = true;
-		$valid_options['connect_timeout'] = true;
-		$valid_options['options'] = true;
-		$valid_options['sslmode'] = true;
-		$valid_options['service'] = true;
+		$valid_options['cqlversion'] = true;
 
-		$connection_string = '';
+		$connection_string = 'cassandra:';
 		foreach($this->config as $key => $value)
 		{
 			if(array_key_exists($key, $valid_options))
 			{
-				$value = addslashes($value);
-				$connection_string.= "$key='$value' ";
+				$connection_string.= "$key=$value;";
 			}
 		}
-		return $connection_string;
+		return rtrim($connection_string, ';');
 	}
 
 	public function exec($sql)
 	{
-		if($this->connection_method == 'sync')
-			$result = $this->exec_sync($sql);
-		elseif($this->connection_method == 'async')
-			$result = $this->exec_async($sql);
-		else
-			throw new Exception('Unknown Postgres Query Method: '.$this->connection_method);
-		$this->last_context = new DatabasePostgresContext($result, $this->get_connection());
-		return new DatabaseResult($this, $this->last_context, $sql);
+		$this->result = $this->get_connection()->prepare($sql);
+		$this->result->execute();;
+		var_dump($this->result);
+		return new DatabaseResult($this, $this->result, $sql);
 	}
 
 	public function begin()
 	{
-		$this->start_private();
-		$this->exec_sync('BEGIN');
+		$this->get_connection()->beginTransaction();
 	}
 
 	public function commit()
 	{
-		$this->exec_sync('COMMIT');
-		$this->stop_private();
+		$this->get_connection()->commit();
 	}
 
 	public function rollback()
 	{
-		$this->exec_sync('ROLLBACK');
-		$this->stop_private();
-	}
-
-	private function exec_sync($sql)
-	{
-		$res = pg_query($this->get_connection(), $sql);
-		if($res === false)
-			throw new Exception('Error TODO: Update This!');
-		return $res;
-	}
-
-	private function exec_async($sql)
-	{
-		if(!is_null($this->last_context))
-			$this->last_context->result();
-		$res = pg_send_query($this->get_connection(), $sql);
-		if($res === false)
-			throw new Exception('Error TODO: Update This!');
-		return $res;
+		$this->get_connection()->rollBack();
 	}
 
 	public function free_result()
 	{
-		pg_free_result($this->context->result());
 	}
 
 	public function affected_rows()
 	{
-		return pg_affected_rows($this->context->result());
+		return $this->result->rowCount();
 	}
 
 	public function num_rows()
 	{
-		return pg_num_rows($this->context->result());
+		return $this->result->rowCount();
 	}
 
 	public function seek($offset = 0)
 	{
-		return pg_result_seek($this->context->result(), $offset);
 	}
 
 	public function fetch_assoc()
 	{
-		return pg_fetch_assoc($this->context->result());
+		$this->result->setFetchMode(\PDO::FETCH_ASSOC);
+		return $this->result->fetch();
 	}
 
 	public function fetch_index()
 	{
-		return pg_fetch_array($this->context->result());
+		$thits->result->setFetchMode(\PDO::FETCH_NUM);
+		return $this->result->fetch();
 	}
 
 	public function fetch_both()
 	{
-		return pg_fetch_array($this->context->result(), null, PGSQL_BOTH);
+		$thits->result->setFetchMode(\PDO::FETCH_BOTH);
+		return $this->result->fetch();
 	}
 
 	public function columns()
@@ -161,7 +125,7 @@ class DatabasePostgres extends Database
 			case 'text':
 			case 'varchar':
 			case 'character varying':
-				return "E'".pg_escape_string($value)."'";
+				return "'".pg_escape_string($value)."'";
 
 			case 'integer':
 			case 'smallint':
@@ -179,14 +143,17 @@ class DatabasePostgres extends Database
 	}
 
 	public function get_columns()
-  {
-		return $this->exec("SELECT 
-				table_schema as schema, table_name as table, column_name as column, (is_nullable='NO')::integer as required, 
-				data_type as type, column_default as default, character_maximum_length as text_length
-			FROM information_schema.columns
-			WHERE table_catalog=current_database()
-			AND table_schema NOT IN ('pg_catalog', 'information_schema')
-			ORDER BY ordinal_position;");
+	{
+		$sql = "select keyspace_name as \"schema\", columnfamily_name as \"table\", column_name as \"column\" from system.schema_columns where keyspace_name = '{$this->config['keyspace']}'";
+		$result = [];
+		foreach($this->exec($sql) as $row)
+		{
+			$row['required'] = 1;
+			$row['type'] = 'text';
+			$row['text_length'] = null;
+			$result[] = $row;
+		}
+		return $result;
 	}
 
 	public function pkey_sql()

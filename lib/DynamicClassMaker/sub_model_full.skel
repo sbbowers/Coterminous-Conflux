@@ -1,7 +1,7 @@
 namespace %%DATABASE_NAME%%;
 
 
-%%CLASS_KEY_WORD%% %%SCHEMA_NAME%%__%%TABLE_NAME%% extends \Model
+%%CLASS_KEY_WORD%% %%SCHEMA_NAME%%__%%TABLE_NAME%% extends \C\Model
 {
 	protected
 		$table_name = '%%TABLE_NAME%%',

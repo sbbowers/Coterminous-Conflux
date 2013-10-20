@@ -237,6 +237,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable
 
 		// Checking for explicitly defined schema
 		$table_schema = explode('__', $table);
+		$schema = null;
 		if(count($table_schema) == 2)
 		{
 			list($schema, $table) = $table_schema;
@@ -260,7 +261,7 @@ class Model implements \ArrayAccess, \Iterator, \Countable
 		// Pulling schema information. 
 		// This needs two updates, First it should ONLY be pulling schema and table
 		// Second, we need to make this utalize caching if avalible
-		$schema_data = $db->exec($db->schema_sql());
+		$schema_data = $db->get_columns();
 
 		// Searching the column data for table's existance
 		// Double checking that there are not two identially named tables in two schemas

@@ -66,7 +66,7 @@ abstract class Database extends DatabasePool{
   public abstract function free_result();
 
   // Schema reflection queries
-  public abstract function schema_sql();
+  public abstract function get_columns();
   public abstract function pkey_sql();
   public abstract function fkey_sql();
   public abstract function sequence_sql($column_id); /* tablename.columnname */

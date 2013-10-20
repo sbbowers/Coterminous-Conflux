@@ -17,7 +17,7 @@ abstract class DatabaseVendor
 
 	// Builds the sql to define all columns of all tables in a database
 	// format of: (schema, table, column, required, type, default, text_length)
-	public abstract function schema_sql();
+	public abstract function get_columns();
 
 	// Builds the sql to determine the primary key of all tables
 	// format of: (schema, table, column)
