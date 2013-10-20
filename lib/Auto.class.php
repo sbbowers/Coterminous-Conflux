@@ -55,10 +55,10 @@ class Auto
 			$files = explode("\n", `find $dir |grep -P '\.php$' | xargs grep -P '^\s*class\s+\w+|^\s*namespace\s+\w+|^\s*interface\s+\w+|^\s*trait\s+\w+|^\s*abstract\s+class\s+\w+'`);
 			foreach($files as $file)
 			{
-				if(preg_match('/(.*):\s*namespace\s+(\w+)/', $file, $matches))
+				if(preg_match('/(.*):\s*namespace\s+([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff\\\\]*)/', $file, $matches))
 					list(,$ns_file,$ns) = $matches;
 
-				if(preg_match('/(.*):\s*(class|interface|trait|abstract\s+class)\s+(\w+)/', $file, $matches))
+				if(preg_match('/(.*):\s*(class|interface|trait|abstract\s+class)\s+([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)/', $file, $matches))
 				{
 					list(, $c_file, ,$class) = $matches;
 				
