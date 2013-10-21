@@ -1,7 +1,7 @@
 <?php
-namespace C\DatabaseVendors;
+namespace C\Database\Vendor;
 
-class Postgres extends \C\DatabaseVendors\Base
+class Postgres extends \C\Database\Vendor\Base
 {
 	private
 		$connection_name,
@@ -22,7 +22,7 @@ class Postgres extends \C\DatabaseVendors\Base
 
 		if($connection === false)
 		{
-			throw new Exception('Postgres Connection Failed');
+			throw new \Exception('Postgres Connection Failed');
 		}
 		return $connection;
 	}

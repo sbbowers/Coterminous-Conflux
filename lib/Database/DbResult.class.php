@@ -1,5 +1,5 @@
 <?php
-namespace C;
+namespace C\Database;
 
 class DbResult implements \Countable, \Iterator, \Arrayaccess
 {

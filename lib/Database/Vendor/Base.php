@@ -1,5 +1,5 @@
 <?php
-namespace C\DatabaseVendors;
+namespace C\Database\Vendor;
 
 abstract class Base
 {

@@ -32,7 +32,7 @@ class Db
 		if(!isset($this->config['vendor']))
 			throw new \Exception("Cannot find vendor for connection $connection_name");
 
-		$this->service_class_name = '\\C\\DatabaseVendors\\'.ucwords(strtolower($this->config['vendor']));
+		$this->service_class_name = '\\C\\Database\\Vendor\\'.ucwords(strtolower($this->config['vendor']));
 		$this->service_class = new $this->service_class_name($connection_name, $this->config);
 
 		$this->set_object_sequence();

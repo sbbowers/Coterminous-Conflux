@@ -1,7 +1,7 @@
 <?php
-namespace C\DatabaseVendors;
+namespace C\Database\Vendor;
 
-class Cassandra extends \C\DatabaseVendors\Base
+class Cassandra extends \C\Database\Vendor\Base
 {
 	private
 		$connection_name,
