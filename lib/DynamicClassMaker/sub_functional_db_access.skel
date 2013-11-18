@@ -1,0 +1,57 @@
+namespace %%DB_LABEL%%;
+
+function init_db()
+{
+	static $conn;
+	if(is_null($conn))
+		$conn = new \C\Database\Db('%%DB_LABEL%%');
+	return $conn;
+}
+
+function get_object()
+{
+	return new \C\Database\Db('%%DB_LABEL%%');
+}
+
+function exec($sql)
+{
+	$conn = init_db();
+	return $conn->exec($sql);
+}
+
+function begin()
+{
+	$conn = init_db();
+	return $conn->begin();
+}
+
+function commit()
+{
+	$conn = init_db();
+	return $conn->commit();
+}
+
+function rollback()
+{
+	$conn = init_db();
+	return $conn->rollback();
+}
+
+function list_schemas()
+{
+	$conn = init_db();
+	return $conn->list_schemas();
+}
+
+function list_tables($schema = null)
+{
+	$conn = init_db();
+	return $conn->list_tables($schema);
+}
+
+function list_columns($table, $schema = null)
+{
+	$conn = init_db();
+	return $conn->list_columns($table, $schema);
+}
+

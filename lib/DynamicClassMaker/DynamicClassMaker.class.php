@@ -1,6 +1,8 @@
 <?php
 namespace C;
 
+/* This class needs to be updated to optionally write the dynamic objects to disk so we can use op-code caching for the dynamic objects */
+
 class DynamicClassMaker
 {
 	private
